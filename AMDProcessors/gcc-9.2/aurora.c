@@ -78,23 +78,31 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 			//system("echo 1 > /sys/devices/system/cpu/cpufreq/boost");			
                 
 		        return auroraKernels[id_actual_region].bestThread;
+			
+		case END_TURBO:
+			auroraKernels[id_actual_region].initResult = omp_get_wtime();
+		        //MATHEUS: escrever nos cores a frequencia de operação do game mode.
+		        return auroraKernels[id_actual_region].bestThread;
 
                 case END:
 			turbo = fopen("/sys/devices/system/cpu/cpufreq/boost", "wt");
                         auroraKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
-			if(auroraKernels[id_actual_region].bestTurbo == TURBO_ON){
-//				system("echo 1 > /sys/devices/system/cpu/cpufreq/boost");
+			if(auroraKernels[id_actual_region].bestTurbo == TURBO_ON && auroraKernels[id_actual_region].bestGame == GAME_OFF){
 			        var = 1;
 			        fprintf(turbo, "%d", var);
-			        fclose(turbo);
+			}else if(auroraKernels[id_actual_region].bestGame == GAME_ON){
+				var = 0;
+			        fprintf(turbo, "%d", var); //deixa turbo core off.
+				printf("DEBUG: Ativou Game Mode\n");
+				//MATHEUS: Setar frequencia de game mode nos cores.	
 			}else{
 			//	system("echo 0 > /sys/devices/system/cpu/cpufreq/boost");
-		//	aurora_start_amd_msr();
+			//	aurora_start_amd_msr();
 			        var = 0;
 			        fprintf(turbo, "%d", var);
-			        fclose(turbo);
 			}
-                        return auroraKernels[id_actual_region].bestThread;
+			fclose(turbo);
+			return auroraKernels[id_actual_region].bestThread;
                 default:
                         aurora_start_amd_msr();
                         auroraKernels[id_actual_region].initResult = omp_get_wtime();
@@ -251,14 +259,24 @@ void aurora_end_parallel_region(){
 			case END_THREADS:
 				if(result < auroraKernels[id_actual_region].bestResult){
 					auroraKernels[id_actual_region].bestTurbo = TURBO_ON;
-					auroraKernels[id_actual_region].state = END;
+					auroraKernels[id_actual_region].state = END_TURBO;
+					//MATHEUS: executar com game mode (setar cores para a frequencia do game mode)
 				}else{
 					auroraKernels[id_actual_region].bestTurbo = TURBO_OFF;
+					auroraKernels[id_actual_region].state = END_TURBO;
+					//MATHEUS: executar com game mode (setar cores para a frequencia do game mode)
+				}
+				break;
+			case END_TURBO:
+				if(result < auroraKernels[id_actual_region].bestResult){
+					auroraKernels[id_actual_region].bestGame = GAME_ON;
+					auroraKernels[id_actual_region].state = END;
+				}else{
+					auroraKernels[id_actual_region].bestTurbo = GAME_OFF;
 					auroraKernels[id_actual_region].state = END;
 				}
 				break;
-				
-                }
+	                }
         }else{
 	 	var = 1;
 	      fprintf(turbo, "%d", var);   
