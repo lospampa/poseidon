@@ -32,7 +32,9 @@ void aurora_init(int aurora, int start_search){
                 auroraKernels[i].auroraMetric = aurora;
                 auroraKernels[i].lastResult = 0.0;
 		auroraKernels[i].bestTurbo = TURBO_OFF;
+		auroraKernels[i].bestGame = GAME_OFF;
                 idKernels[i]=0;
+		
         }
 
         /* Start the counters for energy and time for all the application execution */
