@@ -36,11 +36,14 @@
 #define TEMPERATURE             4
 #define TURBO_ON		0
 #define TURBO_OFF		1
+#define GAME_ON			0
+#define GAME_OFF		1
 
 
 
 #define END                     10
 #define END_THREADS		9
+#define END_TURBO		8
 #define S0                      0
 #define S1                      1
 #define S2                      2
@@ -73,6 +76,7 @@ typedef struct{
         short int lastThread;
         short int startThreads;
 	short int bestTurbo;
+	short int bestGame;
 	int steps;
         short int pass;
         double bestResult, initResult, lastResult, bestTime, total_region_perf;
