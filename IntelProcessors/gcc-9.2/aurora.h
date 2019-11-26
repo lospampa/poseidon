@@ -42,8 +42,7 @@
 #define TEMPERATURE             4
 #define TURBO_ON                0
 #define TURBO_OFF               1
-#define GAME_ON                 0
-#define GAME_OFF                1
+#define GAME_ON                 2
 
 #define END                     10
 #define END_THREADS             9
@@ -76,17 +75,13 @@ typedef struct{
         short int numThreads;
         short int numCores;
         short int bestThread;
-        short int auroraMetric;
+        short int metric;
         short int state;
-        short int lastThread;
-        short int startThreads;
-        short int pass;
-        short int bestTurbo;
-        short int bestGame;
+        short int bestFreq;
         double bestResult, bestTime, initResult, lastResult, total_region_perf, total_region_energy, total_region_edp;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
 
-typeFrame auroraKernels[MAX_KERNEL];
+typeFrame libKernels[MAX_KERNEL];
 
