@@ -71,8 +71,8 @@ struct gomp_task_icv gomp_global_icv = {
   .nest_var = false,
   .bind_var = omp_proc_bind_false,
   .target_data = NULL,
-  .aurora_var=0,
-  .aurora_start_search=0
+  .lib_var=0,
+  .lib_start_search=0
 
 };
 
@@ -210,27 +210,27 @@ parse_schedule (void)
 
 
 
-static bool parse_aurora(const char *name, int *pvalue, bool allow_zero){
+static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
         char *env = getenv(name);
         if(env == NULL){
                 printf("AURORA: Disabled\n");
-                aurora_init(3,0);
+                lib_init(3,0);
                 *pvalue = -1;
                 return false;
         }
         if( (strcmp("performance",env) == 0) || (strcmp("PERFORMANCE",env) == 0)){
-                printf("AURORA - OpenMP Application Optimized for Performance\n");
+                printf("LIB - OpenMP Application Optimized for Performance\n");
                 *pvalue = 0;
         }
         else if( (strcmp("energy",env) == 0) || (strcmp("ENERGY",env) == 0)){
-                printf("AURORA - OpenMP Application Optimized for energy\n");
+                printf("LIB - OpenMP Application Optimized for energy\n");
                 *pvalue = 1;
         }
         else if( (strcmp("edp",env) == 0) || (strcmp("EDP",env) == 0)){
-                printf("AURORA - OpenMP Application Optimized for EDP\n");
+                printf("LIB - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
         }else{
-                printf("AURORA - Optimization not recognized!\n");
+                printf("LIB - Optimization not recognized!\n");
                 printf(" -- OpenMP Application Optimized for Performance by default\n");
                 *pvalue = 0;
                 printf("\n\t\tPlease:\n");
@@ -238,6 +238,7 @@ static bool parse_aurora(const char *name, int *pvalue, bool allow_zero){
                 printf("\t\tTo optimize energy: export OMP_AURORA=ENERGY or export OMP_AURORA=energy\n");
                 printf("\t\tTo optimize edp: export OMP_AURORA=EDP or export OMP_AURORA=edp\n");
         }
+		
 
         return true;
 }
@@ -1352,10 +1353,10 @@ initialize_env (void)
   parse_int ("OMP_DEFAULT_DEVICE", &gomp_global_icv.default_device_var, true);
   parse_int ("OMP_MAX_TASK_PRIORITY", &gomp_max_task_priority_var, true);
 
-   parse_aurora("OMP_AURORA", &gomp_global_icv.aurora_var,true);
-if(gomp_global_icv.aurora_var != -1){
-        parse_int("OMP_AURORA_START_SEARCH", &gomp_global_icv.aurora_start_search, true);
-          aurora_init(gomp_global_icv.aurora_var, gomp_global_icv.aurora_start_search);
+  parse_lib("OMP_AURORA", &gomp_global_icv.lib_var,true);
+if(gomp_global_icv.lib_var != -1){
+        parse_int("OMP_AURORA_START_SEARCH", &gomp_global_icv.lib_start_search, true);
+          lib_init(gomp_global_icv.lib_var, gomp_global_icv.lib_start_search);
    }
 
   parse_unsigned_long ("OMP_MAX_ACTIVE_LEVELS", &gomp_max_active_levels_var,
