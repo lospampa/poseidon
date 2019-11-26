@@ -83,7 +83,7 @@ typedef struct{
         short int pass;
         short int bestTurbo;
         short int bestGame;
-        double bestResult, initResult, lastResult, total_region_perf, total_region_energy, total_region_edp;
+        double bestResult, bestTime, initResult, lastResult, total_region_perf, total_region_energy, total_region_edp;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
