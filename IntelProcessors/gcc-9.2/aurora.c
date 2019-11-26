@@ -1,6 +1,6 @@
 /* File that contains the variable declarations */
 #include <stdio.h>
-#include "lib.h"
+#include "aurora.h"
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void lib_init(int metric, int start_search){
@@ -66,7 +66,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			write(fd, set, sizeof(set));
 			close(fd);
 			libKernels[id_actual_region].initResult = omp_get_wtime();
-                        return auroraKernels[id_actual_region].bestThread;
+                        return libKernels[id_actual_region].bestThread;
 	        case END:
                       	switch(libKernels[id_actual_region].bestFreq){
 				case TURBO_OFF:
@@ -75,14 +75,14 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 					write(fd, set, sizeof(set));
 					close(fd);
 					libKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
-                        		return auroraKernels[id_actual_region].bestThread;
+                        		return libKernels[id_actual_region].bestThread;
 				case TURBO_ON:
 					fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
 					sprintf(set, "%d", 0);
 					write(fd, set, sizeof(set));
 					close(fd);
 					libKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
-                        		return auroraKernels[id_actual_region].bestThread;
+                        		return libKernels[id_actual_region].bestThread;
 				//case GAME_ON:					
 			}
                 default:
@@ -114,7 +114,7 @@ void lib_end_parallel_region(){
                                 }
                                 break;
                         case EDP:
-                                time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
+                                time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                                 energy = lib_end_rapl_sysfs();
                                 result = time * energy;
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
@@ -282,7 +282,7 @@ void lib_start_rapl_sysfs(){
                                         fprintf(stderr,"\tError opening %s!\n",filenames[j][i]);
                                 }
                                 else {
-                                        fscanf(fff,"%lld",&auroraKernels[id_actual_region].kernelBefore[j][i]);
+                                        fscanf(fff,"%lld",&libKernels[id_actual_region].kernelBefore[j][i]);
                                         fclose(fff);
                                 }
                         }
@@ -303,7 +303,7 @@ double lib_end_rapl_sysfs(){
                                 fprintf(stderr,"\tError opening %s!\n",filenames[j][i]);
                         }
                         else {
-                                fscanf(fff,"%lld",&auroraKernels[id_actual_region].kernelAfter[j][i]);
+                                fscanf(fff,"%lld",&libKernels[id_actual_region].kernelAfter[j][i]);
                                 fclose(fff);
                         }
                 }
@@ -313,7 +313,7 @@ double lib_end_rapl_sysfs(){
                 for(i=0;i<NUM_RAPL_DOMAINS;i++) {
                         if(valid[j][i]){
                                 if(strcmp(event_names[j][i],"core")!=0 && strcmp(event_names[j][i],"uncore")!=0){
-                                        total += (((double)auroraKernels[id_actual_region].kernelAfter[j][i]-(double)auroraKernels[id_actual_region].kernelBefore[j][i])/1000000.0);
+                                        total += (((double)libKernels[id_actual_region].kernelAfter[j][i]-(double)libKernels[id_actual_region].kernelBefore[j][i])/1000000.0);
                                 }
                         }
                 }
