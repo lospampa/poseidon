@@ -366,8 +366,8 @@ struct gomp_task_icv
   char bind_var;
   /* Internal ICV.  */
   struct target_mem_desc *target_data;
-  int aurora_var;
-  int aurora_start_search;
+  int lib_var;
+  int lib_start_search;
 };
 
 extern struct gomp_task_icv gomp_global_icv;
