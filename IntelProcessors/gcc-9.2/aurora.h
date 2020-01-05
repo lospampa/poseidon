@@ -42,7 +42,7 @@
 #define TEMPERATURE             4
 #define TURBO_ON                0
 #define TURBO_OFF               1
-#define GAME_ON                 2
+
 
 #define END                     10
 #define END_THREADS             9
