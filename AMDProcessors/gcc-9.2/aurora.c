@@ -4,7 +4,9 @@
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void aurora_init(int aurora, int start_search){
-        int i, startThreads=0;
+        int turbo;
+	int i, startThreads=0;
+	char set[2];
         int numCores = sysconf(_SC_NPROCESSORS_ONLN);
         /*Initialization of RAPL */
         //aurora_detect_cpu(); 
@@ -41,20 +43,18 @@ void aurora_init(int aurora, int start_search){
         id_actual_region = MAX_KERNEL-1;
         aurora_start_amd_msr();
         initGlobalTime = omp_get_wtime();
-	FILE *turbo = fopen("/sys/devices/system/cpu/cpufreq/boost", "wt");
-	int var = 0;
-	fprintf(turbo, "%d", var);
-	fclose(turbo);
-	//setar core
-//	system("echo 0 > /sys/devices/system/cpu/cpufreq/boost");
+	
+	/*Define the turbo core as inactive*/
+	sprintf(set, "%d", 1);
+	turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+	write(turbo, set, sizeof(set));
 
 }
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
 int aurora_resolve_num_threads(uintptr_t ptr_region){
-        int i, var;
-	FILE *turbo;
-	//FILE *turbo = fopen("/sys/devices/system/cpu/cpufreq/boost", "wt");
+        int i, var, turbo;
+	char set[2];
         id_actual_region = -1;
         /* Find the actual parallel region */
         for(i=0;i<totalKernels;i++){
@@ -72,39 +72,41 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
         /* Check the state of the search algorithm. */
         switch(auroraKernels[id_actual_region].state){
 		case END_THREADS:
-			turbo = fopen("/sys/devices/system/cpu/cpufreq/boost", "wt");
+			turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+			sprintf(set, "%d", 1);
+			write(turbo, set, sizeof(set));
+			close(turbo);
                         auroraKernels[id_actual_region].initResult = omp_get_wtime();
-		        var = 1;
-		        fprintf(turbo, "%d", var);
-		        fclose(turbo);
-			//system("echo 1 > /sys/devices/system/cpu/cpufreq/boost");			
-                
 		        return auroraKernels[id_actual_region].bestThread;
 			
-		case END_TURBO:
+	/*	case END_TURBO:
 			auroraKernels[id_actual_region].initResult = omp_get_wtime();
 		        //MATHEUS: escrever nos cores a frequencia de operação do game mode.
 		        return auroraKernels[id_actual_region].bestThread;
-
+        */
                 case END:
 			turbo = fopen("/sys/devices/system/cpu/cpufreq/boost", "wt");
-                        auroraKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
-			if(auroraKernels[id_actual_region].bestTurbo == TURBO_ON && auroraKernels[id_actual_region].bestGame == GAME_OFF){
-			        var = 1;
-			        fprintf(turbo, "%d", var);
-			}else if(auroraKernels[id_actual_region].bestGame == GAME_ON){
-				var = 0;
-			        fprintf(turbo, "%d", var); //deixa turbo core off.
-				printf("DEBUG: Ativou Game Mode\n");
-				//MATHEUS: Setar frequencia de game mode nos cores.	
-			}else{
-			//	system("echo 0 > /sys/devices/system/cpu/cpufreq/boost");
-			//	aurora_start_amd_msr();
-			        var = 0;
-			        fprintf(turbo, "%d", var);
+                     	switch(auroraKernels[id_actual_region].bestFreq){
+				case TURBO_OFF:
+					turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+					sprintf(set, "%d", 0);
+					write(turbo, set, sizeof(set));
+					close(turbo);
+					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
+					return auroraKernels[id_actual_region].bestThread;
+				case TURBO_ON:
+					turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+					sprintf(set, "%d", 0);
+					write(turbo, set, sizeof(set));
+					close(turbo);
+					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
+					return auroraKernels[id_actual_region].bestThread;
+				case GAME_ON:
+					
+				case GAME_OFF:
+				
 			}
-			fclose(turbo);
-			return auroraKernels[id_actual_region].bestThread;
+				
                 default:
                         aurora_start_amd_msr();
                         auroraKernels[id_actual_region].initResult = omp_get_wtime();
