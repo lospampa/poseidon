@@ -53,7 +53,7 @@ void aurora_init(int aurora, int start_search){
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
 int aurora_resolve_num_threads(uintptr_t ptr_region){
-        int i, var, turbo;
+        int i, var, turbo; 
 	char set[2];
         id_actual_region = -1;
         /* Find the actual parallel region */
@@ -95,10 +95,16 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
 					return auroraKernels[id_actual_region].bestThread;
 				case GAME_ON:
+
 				// Matheus: setar a frequencia para todos os cores.	
-				case GAME_OFF:
+				
+                                case GAME_OFF:
 				// Matheus: A ser implementado.
 			}
+                case END_TURBO:
+                        // Abrir arquivo e ligar GAME MODE (COMO?)
+                        //auroraKernels[id_actual_region].initResult = omp_get_wtime();
+		        //return auroraKernels[id_actual_region].bestThread;
 				
                 default:
                         aurora_start_amd_msr();
@@ -203,7 +209,6 @@ void aurora_end_parallel_region(){
 					auroraKernels[id_actual_region].state = END_THREADS;
 					auroraKernels[id_actual_region].bestFreq = TURBO_ON;
                                 }
-		      }
 		     		break;
 				// else{ 
                                         /* Thread scalability stopped */
@@ -273,7 +278,6 @@ void aurora_end_parallel_region(){
                                 }
                                 break;
 				*/
-				
 				
 			case END_THREADS:
 				if(result < auroraKernels[id_actual_region].bestResult){
