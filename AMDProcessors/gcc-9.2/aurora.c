@@ -94,9 +94,9 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 					close(turbo);
 					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
 					return auroraKernels[id_actual_region].bestThread;
-				//case GAME_ON:
-				// Matheus: A ser implementado.	
-				//case GAME_OFF:
+				case GAME_ON:
+				// Matheus: setar a frequencia para todos os cores.	
+				case GAME_OFF:
 				// Matheus: A ser implementado.
 			}
 				
@@ -204,6 +204,7 @@ void aurora_end_parallel_region(){
 					auroraKernels[id_actual_region].bestFreq = TURBO_ON;
                                 }
 		      }
+		     		break;
 				// else{ 
                                         /* Thread scalability stopped */
                                         /* Find the interval of threads that provided this result. */
@@ -225,7 +226,7 @@ void aurora_end_parallel_region(){
                                 //        }
                                   
                                 // } 
-                                break;
+                           
 		
 		
 		
@@ -285,6 +286,16 @@ void aurora_end_parallel_region(){
 					//MATHEUS: executar com game mode (setar cores para a frequencia do game mode)
 				}
 				break;
+			case END_TURBO:
+				if(result){
+					auroraKernels[id_actual_region].bestGame = GAME_ON;
+					auroraKernels[id_actual_region].state = END_THREADS;
+				}else{
+					auroraKernels[id_actual_region].bestGame = GAME_OFF
+					auroraKernels[id_actual_region].state = END_THREADS;
+				}
+				break;
+			
 		}
 	}
 	
