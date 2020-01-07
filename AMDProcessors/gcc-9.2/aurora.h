@@ -34,10 +34,10 @@
 #define EDP                     2
 #define POWER		        3
 #define TEMPERATURE             4
-#define TURBO_ON		1
-#define TURBO_OFF		0
-#define GAME_ON			1
-#define GAME_OFF		0
+#define TURBO_ON		0
+#define TURBO_OFF		1
+#define GAME_ON			2
+#define GAME_OFF		3
 
 
 

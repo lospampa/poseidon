@@ -14,14 +14,14 @@ void aurora_init(int aurora, int start_search){
         /*End initialization of RAPL */
 
         /* Initialization of the variables necessary to perform the search algorithm */
-		if(start_search == 0){
-		        startThreads = numCores;
-		        while(startThreads != 2 && startThreads != 3 && startThreads != 5){
-		                startThreads = startThreads/2;
-		        }
-		}else{
-			startThreads = start_search;
-		}
+	if(start_search == 0){
+	        startThreads = numCores;
+	        while(startThreads != 2 && startThreads != 3 && startThreads != 5){
+	                startThreads = startThreads/2;
+	        }
+	}else{
+		startThreads = start_search;
+	}
         for(i=0;i<MAX_KERNEL;i++){
                 auroraKernels[i].startThreads = startThreads;
                 auroraKernels[i].numThreads = numCores;
@@ -33,8 +33,7 @@ void aurora_init(int aurora, int start_search){
 		auroraKernels[i].total_region_perf = 0.0;
                 auroraKernels[i].auroraMetric = aurora;
                 auroraKernels[i].lastResult = 0.0;
-		auroraKernels[i].bestTurbo = TURBO_OFF;
-		auroraKernels[i].bestGame = GAME_OFF;
+		auroraKernels[i].bestFreq = TURBO_OFF;
                 idKernels[i]=0;
 		
         }
@@ -45,7 +44,7 @@ void aurora_init(int aurora, int start_search){
         initGlobalTime = omp_get_wtime();
 	
 	/*Define the turbo core as inactive*/
-	sprintf(set, "%d", 1);
+	sprintf(set, "%d", 0);
 	turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 	write(turbo, set, sizeof(set));
 
@@ -53,7 +52,7 @@ void aurora_init(int aurora, int start_search){
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
 int aurora_resolve_num_threads(uintptr_t ptr_region){
-        int i, var, turbo; 
+        int i, var, turbo, game; 
 	char set[2];
         id_actual_region = -1;
         /* Find the actual parallel region */
@@ -78,6 +77,13 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 			close(turbo);
                         auroraKernels[id_actual_region].initResult = omp_get_wtime();
 		        return auroraKernels[id_actual_region].bestThread;
+		case END_TURBO:
+			game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
+			sprintf(set, "%d", 3500000);
+			write(game, set, sizeof(set));
+			close(game);
+                        auroraKernels[id_actual_region].initResult = omp_get_wtime();
+		        return auroraKernels[id_actual_region].bestThread;
                 case END:
                      	switch(auroraKernels[id_actual_region].bestFreq){
 				case TURBO_OFF:
@@ -85,6 +91,10 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 					sprintf(set, "%d", 0);
 					write(turbo, set, sizeof(set));
 					close(turbo);
+					game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
+                                        sprintf(set, "%d", 3000000);
+                                        write(game, set, sizeof(set));
+                                        close(game);
 					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
 					return auroraKernels[id_actual_region].bestThread;
 				case TURBO_ON:
@@ -95,18 +105,23 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
 					return auroraKernels[id_actual_region].bestThread;
 				case GAME_ON:
-
-				// Matheus: setar a frequencia para todos os cores.	
-				
-                                case GAME_OFF:
-				// Matheus: A ser implementado.
+					turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+                                        sprintf(set, "%d", 0);
+                                        write(turbo, set, sizeof(set));
+                                        close(turbo);
+					game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
+		                        sprintf(set, "%d", 3500000);
+                		        write(game, set, sizeof(set));
+		                        close(game);
+                		        auroraKernels[id_actual_region].initResult = omp_get_wtime();
+		                        return auroraKernels[id_actual_region].bestThread;			
 			}
-                case END_TURBO:
-                        // Abrir arquivo e ligar GAME MODE (COMO?)
-                        //auroraKernels[id_actual_region].initResult = omp_get_wtime();
-		        //return auroraKernels[id_actual_region].bestThread;
 				
                 default:
+			game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
+                        sprintf(set, "%d", 3000000);
+                        write(game, set, sizeof(set));
+                        close(game);
                         aurora_start_amd_msr();
                         auroraKernels[id_actual_region].initResult = omp_get_wtime();
                         return auroraKernels[id_actual_region].numThreads;
@@ -117,10 +132,9 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 /* It is responsible for performing the search algorithm */
 void aurora_end_parallel_region(){
         double time, energy, result=0, ratio;
-	int turbo
+	int turbo, game;
 	char set[2];
         if(auroraKernels[id_actual_region].state !=END){
-                /* Check the metric that is being evaluated and collect the results */
                 switch(auroraKernels[id_actual_region].auroraMetric){
                         case PERFORMANCE:
                                 time = omp_get_wtime();
@@ -128,7 +142,6 @@ void aurora_end_parallel_region(){
                                 break;
                         case ENERGY:
                                 result = aurora_end_amd_msr();
-                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.000000 || result < 0){
                                         auroraKernels[id_actual_region].state = REPEAT;
                                         auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
@@ -138,36 +151,33 @@ void aurora_end_parallel_region(){
                                 time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
                                 energy = aurora_end_amd_msr();
                                 result = time * energy;
-                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.00000 || result < 0){
                                         auroraKernels[id_actual_region].state = REPEAT;
                                         auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
                                 }
                                 break;
-			/*
 			case POWER:
-                                        time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
-                                        energy = aurora_end_amd_msr();
-                                        result = energy/time;
-					if(result == 0.00000 || result < 0){
-                                                auroraKernels[id_actual_region].state = REPEAT;
-                                                auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
-                                        }
+                                time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
+                                energy = aurora_end_amd_msr();
+                                result = energy/time;
+				if(result == 0.00000 || result < 0){
+                                        auroraKernels[id_actual_region].state = REPEAT;
+                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
+                                }
                                 break;
-                        case TEMPERATURE:
-                        		time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
-                        		energy = aurora_end_amd_msr();
-					result = sqrt( (energy*energy)+(time*time));
-					 auroraKernels[id_actual_region].total_region_perf += time;
-	                                auroraKernels[id_actual_region].steps++;
-        	                        if(time < auroraKernels[id_actual_region].bestTime)
-                	                        auroraKernels[id_actual_region].bestTime = time;
-                        		if(result == 0.00000 || result < 0){
-                                        	auroraKernels[id_actual_region].state = REPEAT;
-                                        	auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
-                                	}
+			case TEMPERATURE:
+                        	time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
+                        	energy = aurora_end_amd_msr();
+				result = sqrt( (energy*energy)+(time*time));
+				auroraKernels[id_actual_region].total_region_perf += time;
+	                        auroraKernels[id_actual_region].steps++;
+        	                if(time < auroraKernels[id_actual_region].bestTime)
+                	                auroraKernels[id_actual_region].bestTime = time;
+                        	if(result == 0.00000 || result < 0){
+                                       	auroraKernels[id_actual_region].state = REPEAT;
+                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
+                                }
                                 break;
-				*/
                 }
                 switch(auroraKernels[id_actual_region].state){
                         case REPEAT:
@@ -186,128 +196,42 @@ void aurora_end_parallel_region(){
                                         auroraKernels[id_actual_region].bestResult = result;
                                         auroraKernels[id_actual_region].bestThread = auroraKernels[id_actual_region].numThreads;
                                         /* if there are opportunities for improvements, then double the number of threads */
-                                        if(auroraKernels[id_actual_region].numThreads * 2 <= auroraKernels[id_actual_region].numCores){
+                                        if(auroraKernels[id_actual_region].numThreads + 2 <= auroraKernels[id_actual_region].numCores/2){
+                                                auroraKernels[id_actual_region].lastThread = auroraKernels[id_actual_region].numThreads;
+                                                auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].bestThread+2;
+                                                auroraKernels[id_actual_region].state = S1;
+                                        }else if(auroraKernels[id_actual_region].numThreads + 2 > auroraKernels[id_actual_region].numCores/2 && auroraKernels[id_actual_region].numThreads*2 == auroraKernels[id_actual_region].numCores){
                                                 auroraKernels[id_actual_region].lastThread = auroraKernels[id_actual_region].numThreads;
                                                 auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].bestThread*2;
                                                 auroraKernels[id_actual_region].state = S1;
-                                        }else{
-                                                /* It means that the best number so far is equal to the number of cores */
-                                                /* Then, it will realize a guided search near to this number */
+					}else{
 						auroraKernels[id_actual_region].state = END_THREADS;
-						/* Activate Turbo Core */
-						auroraKernels[id_actual_region].bestFreq = TURBO_ON;
-
-                                               // auroraKernels[id_actual_region].pass = auroraKernels[id_actual_region].lastThread/2;                                                
-                                               // auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].numThreads  - auroraKernels[id_actual_region].pass;
-                                               // if(auroraKernels[id_actual_region].pass == 1)
-                                               //         auroraKernels[id_actual_region].state = S3;        
-					       // else
-	                                       //         auroraKernels[id_actual_region].state = S2;
+						auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
                                         }
-					
 				}else{
 					auroraKernels[id_actual_region].state = END_THREADS;
-					auroraKernels[id_actual_region].bestFreq = TURBO_ON;
+					auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
                                 }
 		     		break;
-				// else{ 
-                                        /* Thread scalability stopped */
-                                        /* Find the interval of threads that provided this result. */
-                                        /* if the best number of threads so far is equal to the number of cores, then go to.. */
-                                //        if(auroraKernels[id_actual_region].bestThread == auroraKernels[id_actual_region].numCores/2){
-                                //                auroraKernels[id_actual_region].pass = auroraKernels[id_actual_region].lastThread/2;                                                
-                                //                auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].numThreads  - auroraKernels[id_actual_region].pass;
-                                //                if(auroraKernels[id_actual_region].pass == 1)
-                                //                        auroraKernels[id_actual_region].state = S3;        
-        			//		else
-		                //                        auroraKernels[id_actual_region].state = S2;
-                                //       }else{
-                                //                auroraKernels[id_actual_region].pass = auroraKernels[id_actual_region].lastThread/2;                                                
-                                //                auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].numThreads  + auroraKernels[id_actual_region].pass;
-                                //                if(auroraKernels[id_actual_region].pass == 1)
-                                //                        auroraKernels[id_actual_region].state = S3;        
-                                //                else
-				//			auroraKernels[id_actual_region].state = S2;  
-                                //        }
-                                  
-                                // } 
-                           
-		
-		
-		
-		
-		
-                      /*  case S2:        
-                                if(auroraKernels[id_actual_region].bestResult < result){
-                                        auroraKernels[id_actual_region].pass = auroraKernels[id_actual_region].pass/2;
-                                        auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].numThreads + auroraKernels[id_actual_region].pass;
-                                        if(auroraKernels[id_actual_region].pass == 1)
-                                                auroraKernels[id_actual_region].state = S3;
-                                        else
-                                                auroraKernels[id_actual_region].state = S2;
-                                }else{
-                                        auroraKernels[id_actual_region].bestThread = auroraKernels[id_actual_region].numThreads;
-                                        auroraKernels[id_actual_region].bestResult = result;
-                                        auroraKernels[id_actual_region].pass = auroraKernels[id_actual_region].pass/2;
-                                        auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].numThreads + auroraKernels[id_actual_region].pass;
-                                        if(auroraKernels[id_actual_region].pass == 1)
-                                                auroraKernels[id_actual_region].state = S3;
-                                        else
-                                                auroraKernels[id_actual_region].state = S2;
-                                }
-                                break;
-			*/
-                      /*  case S3: //The last comparison to define the best number of threads
-                                if(result < auroraKernels[id_actual_region].bestResult){
-                                        auroraKernels[id_actual_region].bestThread = auroraKernels[id_actual_region].numThreads;
-                                        auroraKernels[id_actual_region].state = END_THREADS;
-					//ligar turbo core
-					//system("echo 1 > /sys/devices/system/cpu/cpufreq/boost");
-				        //FILE *turbo = fopen("/sys/devices/system/cpu/cpufreq/boost", "wt");
-				        var = 1;
-				        fprintf(turbo, "%d", var);
-				        //fclose(turbo);
-                                }else{
-                                        auroraKernels[id_actual_region].state = END_THREADS;
-//					system("echo 1 > /sys/devices/system/cpu/cpufreq/boost");
-				        //FILE *turbo = fopen("/sys/devices/system/cpu/cpufreq/boost", "wt");
-				        var = 1;
-				        fprintf(turbo, "%d", var);
-				        //fclose(turbo);
-					//ligar turbo core
-                                }
-                                break;
-				*/
-				
 			case END_THREADS:
 				if(result < auroraKernels[id_actual_region].bestResult){
-					auroraKernels[id_actual_region].bestTurbo = TURBO_ON;
-					auroraKernels[id_actual_region].state = END;
-					//MATHEUS: executar com game mode (setar cores para a frequencia do game mode)
-				}else{
-					auroraKernels[id_actual_region].bestTurbo = TURBO_OFF;
-					auroraKernels[id_actual_region].state = END;
-					//MATHEUS: executar com game mode (setar cores para a frequencia do game mode)
+					auroraKernels[id_actual_region].bestFreq = TURBO_ON;
+					auroraKernels[id_actual_region].state = END_TURBO;
 				}
 				break;
 			case END_TURBO:
-				if(result){
-					auroraKernels[id_actual_region].bestGame = GAME_ON;
-					auroraKernels[id_actual_region].state = END_THREADS;
-				}else{
-					auroraKernels[id_actual_region].bestGame = GAME_OFF
-					auroraKernels[id_actual_region].state = END_THREADS;
+				if(result < auroraKernels[id_actual_region].bestResult){
+					auroraKernels[id_actual_region].bestFreq = GAME_ON;
+					auroraKernels[id_actual_region].state = END;
 				}
 				break;
 			
 		}
-	}
-	
+	}	
 	turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 	sprintf(set, "%d", 1);
 	write(turbo, set, sizeof(set));
 	close(turbo);
-
 }
 
 /* It finalizes the environment of Aurora */
@@ -376,7 +300,7 @@ double aurora_end_amd_msr(){
         int fd;
         sprintf(msr_filename, "/dev/cpu/0/msr");
         fd = open(msr_filename, O_RDONLY);
-		uint64_t data;
+	uint64_t data;
         pread(fd, &data, sizeof data, AMD_MSR_PWR_UNIT);
 	int core_energy_units = (long long) data;
 	unsigned int energy_unit = (core_energy_units & AMD_ENERGY_UNIT_MASK) >> 8;
