@@ -12,21 +12,15 @@
 #include <unistd.h>
 #include <stdint.h>
 
-/*define RAPL Environment*/
+/*define AMD_MSR ENVIRONMENT*/
 
-#define CPU_SANDYBRIDGE         42
-#define CPU_SANDYBRIDGE_EP      45
-#define CPU_IVYBRIDGE           58
-#define CPU_IVYBRIDGE_EP        62
-#define CPU_HASWELL             60      // 70 too?
-#define CPU_HASWELL_EP          63
-#define CPU_HASWELL_1           69
-#define CPU_BROADWELL           61      // 71 too?
-#define CPU_BROADWELL_EP        79
-#define CPU_BROADWELL_DE        86
-#define CPU_SKYLAKE             78      
-#define CPU_SKYLAKE_1           94
-#define NUM_RAPL_DOMAINS        4
+#define AMD_MSR_PWR_UNIT 0xC0010299
+#define AMD_MSR_CORE_ENERGY 0xC001029A
+#define AMD_MSR_PACKAGE_ENERGY 0xC001029B
+#define AMD_TIME_UNIT_MASK 0xF0000
+#define AMD_ENERGY_UNIT_MASK 0x1F00
+#define AMD_POWER_UNIT_MASK 0xF
+#define STRING_BUFFER 1024
 #define MAX_CPUS                128 //1024
 #define MAX_PACKAGES            4 //16
 
@@ -38,15 +32,18 @@
 #define PERFORMANCE             0
 #define ENERGY                  1
 #define EDP                     2
-#define POWER                   3
+#define POWER		        3
 #define TEMPERATURE             4
-#define TURBO_ON                0
-#define TURBO_OFF               1
-#define GAME_ON                 2
+#define TURBO_ON		0
+#define TURBO_OFF		1
+#define GAME_ON			2
+#define GAME_OFF		3
+
+
 
 #define END                     10
-#define END_THREADS             9
-#define END_TURBO               8
+#define END_THREADS		9
+#define END_TURBO		8
 #define S0                      0
 #define S1                      1
 #define S2                      2
@@ -55,33 +52,38 @@
 
 
 
+
+
 /*global variables*/
 
 static int package_map[MAX_PACKAGES];
-static int total_packages=0, total_cores=0;
-char rapl_domain_names[NUM_RAPL_DOMAINS][30]= {"energy-cores", "energy-gpu", "energy-pkg", "energy-ram"};
-char event_names[MAX_PACKAGES][NUM_RAPL_DOMAINS][256];
-char filenames[MAX_PACKAGES][NUM_RAPL_DOMAINS][256];
 char packname[MAX_PACKAGES][256];
 char tempfile[256];
-int valid[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 double initGlobalTime = 0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int auroraMetric;
 short int totalKernels=0;
+short int auroraTotalPackages=0;
+short int auroraTotalCores=0;
 
 typedef struct{
         short int numThreads;
         short int numCores;
         short int bestThread;
-        short int metric;
+        short int auroraMetric;
         short int state;
-        short int bestFreq;
-        double bestResult, bestTime, initResult, lastResult, total_region_perf, total_region_energy, total_region_edp;
-        long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
-        long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
+        short int lastThread;
+        short int startThreads;
+	short int bestTurbo;
+	short int bestGame;
+	int steps;
+        short int pass;
+        double bestResult, initResult, lastResult, bestTime, total_region_perf;
+        long long kernelBefore[MAX_PACKAGES];
+        long long kernelAfter[MAX_PACKAGES];
+	
 }typeFrame;
 
-typeFrame libKernels[MAX_KERNEL];
+typeFrame auroraKernels[MAX_KERNEL];
 

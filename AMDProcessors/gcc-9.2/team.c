@@ -1014,7 +1014,7 @@ team_destructor (void)
 {
   /* Without this dlclose on libgomp could lead to subsequent
      crashes.  */
-  lib_destructor();
+  aurora_destructor();
   pthread_key_delete (gomp_thread_destructor);
 }
 
