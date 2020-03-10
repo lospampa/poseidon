@@ -1,58 +1,48 @@
 /* File that contains the variable declarations */
-#include "aurora.h" 
 #include <stdio.h>
+#include "aurora.h"
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */
-void aurora_init(int aurora, int start_search){
-        int turbo;
-	int i, startThreads=0;
+void lib_init(int metric, int start_search){
+        int i, fd;
 	char set[2];
         int numCores = sysconf(_SC_NPROCESSORS_ONLN);
         /*Initialization of RAPL */
-        //aurora_detect_cpu(); 
-        aurora_detect_packages();
+        lib_detect_cpu();
+        lib_detect_packages();
         /*End initialization of RAPL */
 
         /* Initialization of the variables necessary to perform the search algorithm */
-	if(start_search == 0){
-	        startThreads = numCores;
-	        while(startThreads != 2 && startThreads != 3 && startThreads != 5){
-	                startThreads = startThreads/2;
-	        }
-	}else{
-		startThreads = start_search;
-	}
         for(i=0;i<MAX_KERNEL;i++){
-                auroraKernels[i].startThreads = startThreads;
-                auroraKernels[i].numThreads = numCores;
-                auroraKernels[i].numCores = numCores;
-                auroraKernels[i].initResult = 0.0;
-                auroraKernels[i].state = REPEAT;
-                auroraKernels[i].steps = 0;
-                auroraKernels[i].bestTime = 1000.00;
-		auroraKernels[i].total_region_perf = 0.0;
-                auroraKernels[i].auroraMetric = aurora;
-                auroraKernels[i].lastResult = 0.0;
-		auroraKernels[i].bestFreq = TURBO_OFF;
+                libKernels[i].numThreads = numCores;
+                libKernels[i].numCores = numCores;
+                libKernels[i].initResult = 0.0;
+		libKernels[i].total_region_perf = 0.0;
+		libKernels[i].total_region_energy = 0.0;
+		libKernels[i].total_region_edp = 0.0;
+                libKernels[i].state = REPEAT;
+                libKernels[i].metric = metric;
+		libKernels[i].bestFreq = TURBO_OFF;
                 idKernels[i]=0;
-		
         }
 
         /* Start the counters for energy and time for all the application execution */
         id_actual_region = MAX_KERNEL-1;
-        aurora_start_amd_msr();
+        lib_start_rapl_sysfs();
         initGlobalTime = omp_get_wtime();
-	
-	/*Define the turbo core as inactive*/
-	sprintf(set, "%d", 0);
-	turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-	write(turbo, set, sizeof(set));
-
+        
+        
+	/*Define the turbo core as inactive -- verificar se vai funcionar desta maneira */
+	sprintf(set, "%d", 1);
+	fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+	write(fd, set, sizeof(set));
+	close(fd);      
 }
 
+
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
-int aurora_resolve_num_threads(uintptr_t ptr_region){
-        int i, var, turbo, game; 
+int lib_resolve_num_threads(uintptr_t ptr_region){
+        int i, fd;
 	char set[2];
         id_actual_region = -1;
         /* Find the actual parallel region */
@@ -69,243 +59,262 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
                 totalKernels++;
         }
         /* Check the state of the search algorithm. */
-        switch(auroraKernels[id_actual_region].state){
+        switch(libKernels[id_actual_region].state){
 		case END_THREADS:
-			turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-			sprintf(set, "%d", 1);
-			write(turbo, set, sizeof(set));
-			close(turbo);
-                        auroraKernels[id_actual_region].initResult = omp_get_wtime();
-		        return auroraKernels[id_actual_region].bestThread;
-		case END_TURBO:
-			game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
-			sprintf(set, "%d", 3500000);
-			write(game, set, sizeof(set));
-			close(game);
-                        auroraKernels[id_actual_region].initResult = omp_get_wtime();
-		        return auroraKernels[id_actual_region].bestThread;
-                case END:
-                     	switch(auroraKernels[id_actual_region].bestFreq){
+                        fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+			sprintf(set, "%d", 0);
+			write(fd, set, sizeof(set));
+			close(fd);
+			libKernels[id_actual_region].initResult = omp_get_wtime();
+                        return libKernels[id_actual_region].bestThread;
+	        case END:
+                      	switch(libKernels[id_actual_region].bestFreq){
 				case TURBO_OFF:
-					turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-					sprintf(set, "%d", 0);
-					write(turbo, set, sizeof(set));
-					close(turbo);
-					game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
-                                        sprintf(set, "%d", 3000000);
-                                        write(game, set, sizeof(set));
-                                        close(game);
-					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
-					return auroraKernels[id_actual_region].bestThread;
-				case TURBO_ON:
-					turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+                        		fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
 					sprintf(set, "%d", 1);
-					write(turbo, set, sizeof(set));
-					close(turbo);
-					auroraKernels[id_actual_region].initResult = omp_get_wtime(); /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
-					return auroraKernels[id_actual_region].bestThread;
-				case GAME_ON:
-					turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-                                        sprintf(set, "%d", 0);
-                                        write(turbo, set, sizeof(set));
-                                        close(turbo);
-					game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
-		                        sprintf(set, "%d", 3500000);
-                		        write(game, set, sizeof(set));
-		                        close(game);
-                		        auroraKernels[id_actual_region].initResult = omp_get_wtime();
-		                        return auroraKernels[id_actual_region].bestThread;			
+					write(fd, set, sizeof(set));
+					close(fd);
+					libKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
+                        		return libKernels[id_actual_region].bestThread;
+				case TURBO_ON:
+					fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+					sprintf(set, "%d", 0);
+					write(fd, set, sizeof(set));
+					close(fd);
+					libKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
+                        		return libKernels[id_actual_region].bestThread;				
 			}
-				
                 default:
-			game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
-                        sprintf(set, "%d", 3000000);
-                        write(game, set, sizeof(set));
-                        close(game);
-                        aurora_start_amd_msr();
-                        auroraKernels[id_actual_region].initResult = omp_get_wtime();
-                        return auroraKernels[id_actual_region].numThreads;
+                        lib_start_rapl_sysfs();
+                        libKernels[id_actual_region].initResult = omp_get_wtime();
+                        return libKernels[id_actual_region].numThreads;
         }
 
 }
 
 /* It is responsible for performing the search algorithm */
-void aurora_end_parallel_region(){
-        double time, energy, result=0, ratio;
-	int turbo, game;
+void lib_end_parallel_region(){
+        double time, energy, result=0;
+	int fd;
 	char set[2];
-        if(auroraKernels[id_actual_region].state !=END){
-                switch(auroraKernels[id_actual_region].auroraMetric){
+        if(libKernels[id_actual_region].state !=END){
+                /* Check the metric that is being evaluated and collect the results */
+                switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
                                 time = omp_get_wtime();
-                                result = time - auroraKernels[id_actual_region].initResult;
+                                result = time - libKernels[id_actual_region].initResult;
                                 break;
                         case ENERGY:
-                                result = aurora_end_amd_msr();
+                                result = lib_end_rapl_sysfs();
+                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.000000 || result < 0){
-                                        auroraKernels[id_actual_region].state = REPEAT;
-                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
+                                        libKernels[id_actual_region].state = REPEAT;
+                                        libKernels[id_actual_region].metric = PERFORMANCE;
                                 }
                                 break;
                         case EDP:
-                                time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
-                                energy = aurora_end_amd_msr();
+                                time = omp_get_wtime() - libKernels[id_actual_region].initResult;
+                                energy = lib_end_rapl_sysfs();
                                 result = time * energy;
+                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.00000 || result < 0){
-                                        auroraKernels[id_actual_region].state = REPEAT;
-                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
-                                }
-                                break;
-			case POWER:
-                                time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
-                                energy = aurora_end_amd_msr();
-                                result = energy/time;
-				if(result == 0.00000 || result < 0){
-                                        auroraKernels[id_actual_region].state = REPEAT;
-                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
-                                }
-                                break;
-			case TEMPERATURE:
-                        	time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
-                        	energy = aurora_end_amd_msr();
-				result = sqrt( (energy*energy)+(time*time));
-				auroraKernels[id_actual_region].total_region_perf += time;
-	                        auroraKernels[id_actual_region].steps++;
-        	                if(time < auroraKernels[id_actual_region].bestTime)
-                	                auroraKernels[id_actual_region].bestTime = time;
-                        	if(result == 0.00000 || result < 0){
-                                       	auroraKernels[id_actual_region].state = REPEAT;
-                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
+                                        libKernels[id_actual_region].state = REPEAT;
+                                        libKernels[id_actual_region].metric = PERFORMANCE;
                                 }
                                 break;
                 }
-                switch(auroraKernels[id_actual_region].state){
+                switch(libKernels[id_actual_region].state){
                         case REPEAT:
-                                auroraKernels[id_actual_region].state = S0;
-                                auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].startThreads; 
-                                auroraKernels[id_actual_region].lastThread = auroraKernels[id_actual_region].numThreads;
+                                libKernels[id_actual_region].numThreads = 2;
+				libKernels[id_actual_region].state = S0;
                                 break;
                         case S0:
-                                auroraKernels[id_actual_region].bestResult = result;
-                                auroraKernels[id_actual_region].bestThread = auroraKernels[id_actual_region].numThreads;
-                                auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].bestThread*2; 
-                                auroraKernels[id_actual_region].state = S1;
+                                libKernels[id_actual_region].bestResult = result;
+                                libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
+                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread+2;
+                                libKernels[id_actual_region].state = S1;
                                 break;
                         case S1:
-                                if(result < auroraKernels[id_actual_region].bestResult){ //comparing S0 to REPEAT
-                                        auroraKernels[id_actual_region].bestResult = result;
-                                        auroraKernels[id_actual_region].bestThread = auroraKernels[id_actual_region].numThreads;
+                                if(result < libKernels[id_actual_region].bestResult){ //comparing S0 to REPEAT
+                                        libKernels[id_actual_region].bestResult = result;
+                                        libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
                                         /* if there are opportunities for improvements, then double the number of threads */
-                                        if(auroraKernels[id_actual_region].numThreads + 2 <= auroraKernels[id_actual_region].numCores/2){
-                                                auroraKernels[id_actual_region].lastThread = auroraKernels[id_actual_region].numThreads;
-                                                auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].bestThread+2;
-                                                auroraKernels[id_actual_region].state = S1;
-                                        }else if(auroraKernels[id_actual_region].numThreads + 2 > auroraKernels[id_actual_region].numCores/2 && auroraKernels[id_actual_region].numThreads*2 == auroraKernels[id_actual_region].numCores){
-                                                auroraKernels[id_actual_region].lastThread = auroraKernels[id_actual_region].numThreads;
-                                                auroraKernels[id_actual_region].numThreads = auroraKernels[id_actual_region].bestThread*2;
-                                                auroraKernels[id_actual_region].state = S1;
-					}else{
-						auroraKernels[id_actual_region].state = END_THREADS;
-						auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                        if(libKernels[id_actual_region].numThreads + 2 <= libKernels[id_actual_region].numCores/2){
+                                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread+2;
+                                                libKernels[id_actual_region].state = S1;
+                                        }else{
+                                                /* It means that the best number so far is equal to the number of cores */
+                                                /* Then, it will realize a guided search near to this number */
+					        libKernels[id_actual_region].state = END_THREADS;
+						/* Activate Turbo Core */
+						libKernels[id_actual_region].bestFreq = TURBO_ON;
+											
+						
                                         }
-				}else{
-					auroraKernels[id_actual_region].state = END_THREADS;
-					auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                }else{
+					libKernels[id_actual_region].state = END_THREADS;
+					libKernels[id_actual_region].bestFreq = TURBO_ON;
                                 }
-		     		break;
-			case END_THREADS:
-				if(result < auroraKernels[id_actual_region].bestResult){
-					auroraKernels[id_actual_region].bestFreq = TURBO_ON;
-					auroraKernels[id_actual_region].state = END_TURBO;
-				}
-				break;
-			case END_TURBO:
-				if(result < auroraKernels[id_actual_region].bestResult){
-					auroraKernels[id_actual_region].bestFreq = GAME_ON;
-					auroraKernels[id_actual_region].state = END;
-				}
-				break;
-			
-		}
-	}	
-	turbo = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-	sprintf(set, "%d", 1);
-	write(turbo, set, sizeof(set));
-	close(turbo);
+                                break;
+                        case END_THREADS:
+                                if(result < libKernels[id_actual_region].bestResult){
+                                        libKernels[id_actual_region].bestFreq = TURBO_ON;
+                                        libKernels[id_actual_region].state = END;
+                                }else{
+                                        libKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                        libKernels[id_actual_region].state = END;
+                                } 
+                                break;
+                       }
+        }
+	fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+	sprintf(set, "%d", 0);
+	write(fd, set, sizeof(set));
+	close(fd);
+	
 }
 
 /* It finalizes the environment of Aurora */
-void aurora_destructor(){
-        double time = omp_get_wtime() - initGlobalTime;
+void lib_destructor(){
+        float time = omp_get_wtime() - initGlobalTime;
         id_actual_region = MAX_KERNEL-1;
-        double energy = aurora_end_amd_msr();
-        printf("AURORA - Execution Time: %.5f seconds\n", time);
-        printf("AURORA - Energy: %.5f joules\n",energy);
-        printf("AURORA - EDP: %.5f\n",time*energy);
-        printf("AURORA - AVG Power Consumption: %.5f\n", energy/time);
+        float energy = lib_end_rapl_sysfs();
+        float edp = time * energy;
+        printf("LIB - Execution Time: %.5f seconds\n", time);
+        printf("LIB - Energy: %.5f joules\n",energy);
+        printf("LIB - EDP: %.5f\n",edp);
 }
 
-
-void aurora_detect_packages() {
-
-	char filename[STRING_BUFFER];
-	FILE *fff;
-	int package;
-	int i;
-
-	for(i=0;i<MAX_PACKAGES;i++) package_map[i]=-1;
-
-	for(i=0;i<MAX_CPUS;i++) {
-		sprintf(filename,"/sys/devices/system/cpu/cpu%d/topology/physical_package_id",i);
-		fff=fopen(filename,"r");
-		if (fff==NULL) break;
-		fscanf(fff,"%d",&package);
-		fclose(fff);
-
-		if (package_map[package]==-1) {
-			auroraTotalPackages++;
-			package_map[package]=i;
-		}
-
-	}
-
+/* Function used by the Intel RAPL to detect the CPU Architecture*/
+void lib_detect_cpu(){
+        FILE *fff;
+        int family,model=-1;
+        char buffer[BUFSIZ],*result;
+        char vendor[BUFSIZ];
+        fff=fopen("/proc/cpuinfo","r");
+        while(1) {
+                result=fgets(buffer,BUFSIZ,fff);
+                if (result==NULL)
+                        break;
+                if (!strncmp(result,"vendor_id",8)) {
+                        sscanf(result,"%*s%*s%s",vendor);
+                        if (strncmp(vendor,"GenuineIntel",12)) {
+                                printf("%s not an Intel chip\n",vendor);
+                        }
+                }
+                if (!strncmp(result,"cpu family",10)) {
+                        sscanf(result,"%*s%*s%*s%d",&family);
+                        if (family!=6) {
+                                printf("Wrong CPU family %d\n",family);
+                        }
+                }
+                if (!strncmp(result,"model",5)) {
+                        sscanf(result,"%*s%*s%d",&model);
+                }
+        }
+        fclose(fff);
 }
 
-void aurora_start_amd_msr(){
-	char msr_filename[STRING_BUFFER];
-	int fd;
-	sprintf(msr_filename, "/dev/cpu/0/msr");
-	fd = open(msr_filename, O_RDONLY);
-	if ( fd < 0 ) {
-		if ( errno == ENXIO ) {
-			fprintf(stderr, "rdmsr: No CPU 0\n");
-			exit(2);
-		} else if ( errno == EIO ) {
-			fprintf(stderr, "rdmsr: CPU 0 doesn't support MSRs\n");
-			exit(3);
-		} else {
-			perror("rdmsr:open");
-			fprintf(stderr,"Trying to open %s\n",msr_filename);
-			exit(127);
-		}
-	}
-	uint64_t data;
-	pread(fd, &data, sizeof data, AMD_MSR_PACKAGE_ENERGY);
-	//auroraKernels[id_actual_region].kernelBefore[0] = read_msr(fd, AMD_MSR_PACKAGE_ENERGY);
-	auroraKernels[id_actual_region].kernelBefore[0] = (long long) data;
+/* Function used by the Intel RAPL to detect the number of cores and CPU sockets*/
+void lib_detect_packages(){
+        char filename[BUFSIZ];
+        FILE *fff;
+        int package;
+        int i;
+        for(i=0;i<MAX_PACKAGES;i++)
+                package_map[i]=-1;
+        for(i=0;i<MAX_CPUS;i++) {
+                sprintf(filename,"/sys/devices/system/cpu/cpu%d/topology/physical_package_id",i);
+                fff=fopen(filename,"r");
+                if (fff==NULL)
+                        break;
+                fscanf(fff,"%d",&package);
+                fclose(fff);
+                if (package_map[package]==-1) {
+                        total_packages++;
+                        package_map[package]=i;
+                }
+        }
+        total_cores=i;
 }
 
-double aurora_end_amd_msr(){
-	char msr_filename[STRING_BUFFER];
-        int fd;
-        sprintf(msr_filename, "/dev/cpu/0/msr");
-        fd = open(msr_filename, O_RDONLY);
-	uint64_t data;
-        pread(fd, &data, sizeof data, AMD_MSR_PWR_UNIT);
-	int core_energy_units = (long long) data;
-	unsigned int energy_unit = (core_energy_units & AMD_ENERGY_UNIT_MASK) >> 8;
-	pread(fd, &data, sizeof data, AMD_MSR_PACKAGE_ENERGY);
-	auroraKernels[id_actual_region].kernelAfter[0] = (long long) data;
-	double result = (auroraKernels[id_actual_region].kernelAfter[0] - auroraKernels[id_actual_region].kernelBefore[0])*pow(0.5,(float)(energy_unit));
-	return result;
+/* Function used by the Intel RAPL to store the actual value of the hardware counter*/
+void lib_start_rapl_sysfs(){
+        int i,j;
+        FILE *fff;
+        for(j=0;j<total_packages;j++) {
+                i=0;
+                sprintf(packname[j],"/sys/class/powercap/intel-rapl/intel-rapl:%d",j);
+                sprintf(tempfile,"%s/name",packname[j]);
+                fff=fopen(tempfile,"r");
+                if (fff==NULL) {
+                        fprintf(stderr,"\tCould not open %s\n",tempfile);
+                        exit(0);
+                }
+                fscanf(fff,"%s",event_names[j][i]);
+                valid[j][i]=1;
+                fclose(fff);
+                sprintf(filenames[j][i],"%s/energy_uj",packname[j]);
+
+                /* Handle subdomains */
+                for(i=1;i<NUM_RAPL_DOMAINS;i++){
+                        sprintf(tempfile,"%s/intel-rapl:%d:%d/name", packname[j],j,i-1);
+                        fff=fopen(tempfile,"r");
+                        if (fff==NULL) {
+                                //fprintf(stderr,"\tCould not open %s\n",tempfile);
+                                valid[j][i]=0;
+                                continue;
+                        }
+                        valid[j][i]=1;
+                        fscanf(fff,"%s",event_names[j][i]);
+                        fclose(fff);
+                        sprintf(filenames[j][i],"%s/intel-rapl:%d:%d/energy_uj", packname[j],j,i-1);
+                }
+        }
+ /* Gather before values */
+        for(j=0;j<total_packages;j++) {
+                for(i=0;i<NUM_RAPL_DOMAINS;i++) {
+                        if(valid[j][i]) {
+                                fff=fopen(filenames[j][i],"r");
+                                if (fff==NULL) {
+                                        fprintf(stderr,"\tError opening %s!\n",filenames[j][i]);
+                                }
+                                else {
+                                        fscanf(fff,"%lld",&libKernels[id_actual_region].kernelBefore[j][i]);
+                                        fclose(fff);
+                                }
+                        }
+                }
+        }
+}
+
+/* Function used by the Intel RAPL to load the value of the hardware counter and returns the energy consumption*/
+double lib_end_rapl_sysfs(){
+        int i, j;
+        FILE *fff;
+        double total=0;
+        for(j=0;j<total_packages;j++) {
+                for(i=0;i<NUM_RAPL_DOMAINS;i++) {
+                        if (valid[j][i]) {
+                                fff=fopen(filenames[j][i],"r");
+                        if (fff==NULL) {
+                                fprintf(stderr,"\tError opening %s!\n",filenames[j][i]);
+                        }
+                        else {
+                                fscanf(fff,"%lld",&libKernels[id_actual_region].kernelAfter[j][i]);
+                                fclose(fff);
+                        }
+                }
+                }
+        }
+        for(j=0;j<total_packages;j++) {
+                for(i=0;i<NUM_RAPL_DOMAINS;i++) {
+                        if(valid[j][i]){
+                                if(strcmp(event_names[j][i],"core")!=0 && strcmp(event_names[j][i],"uncore")!=0){
+                                        total += (((double)libKernels[id_actual_region].kernelAfter[j][i]-(double)libKernels[id_actual_region].kernelBefore[j][i])/1000000.0);
+                                }
+                        }
+                }
+        }
+        return total;
 }

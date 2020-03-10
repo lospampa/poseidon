@@ -33,19 +33,19 @@
 #include <stddef.h>
 #include "gstdint.h"
 
+
 /* aurora.c */
 
-void aurora_init(int aurora, int start_search);
-void aurora_destructor(void);
-void aurora_detect_packages(void);
-void aurora_start_amd_msr(void);
-double aurora_end_amd_msr(void);
-void aurora_init_variables(int auroraMetric);
-int aurora_find_id_kernel(uintptr_t ptr_region);
-int aurora_resolve_num_threads(uintptr_t ptr_region);
-void aurora_end_parallel_region(void);
-void aurora_find_best_tlp(float result);
-
+void lib_init(int lib, int start_search);
+void lib_destructor(void);
+void lib_detect_packages(void);
+void lib_detect_cpu(void);
+void lib_start_rapl_sysfs(void);
+double lib_end_rapl_sysfs(void);
+void lib_init_variables(int auroraMetric);
+int lib_find_id_kernel(uintptr_t ptr_region);
+int lib_resolve_num_threads(uintptr_t ptr_region);
+void lib_end_parallel_region(void);
 
 
 /* barrier.c */
