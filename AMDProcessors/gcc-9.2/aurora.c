@@ -54,6 +54,7 @@ void aurora_init(int aurora, int start_search){
 int aurora_resolve_num_threads(uintptr_t ptr_region){
         int i, var, turbo, game; 
 	char set[2];
+	char set2[8]
         id_actual_region = -1;
         /* Find the actual parallel region */
         for(i=0;i<totalKernels;i++){
@@ -79,8 +80,8 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 		        return auroraKernels[id_actual_region].bestThread;
 		case END_TURBO:
 			game = open("/sys/devices/system/cpu/cpufreq/aurora/global_freq", O_WRONLY);
-			sprintf(set, "%d", 3500000);
-			write(game, set, sizeof(set));
+			sprintf(set2, "%d", 3500000);
+			write(game, set2, sizeof(set2));
 			close(game);
                         auroraKernels[id_actual_region].initResult = omp_get_wtime();
 		        return auroraKernels[id_actual_region].bestThread;
