@@ -61,7 +61,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         /* Check the state of the search algorithm. */
         switch(libKernels[id_actual_region].state){
 		case END_THREADS:
-                        fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+                        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			sprintf(set, "%d", 0);
 			write(fd, set, sizeof(set));
 			close(fd);
@@ -70,14 +70,14 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	        case END:
                       	switch(libKernels[id_actual_region].bestFreq){
 				case TURBO_OFF:
-                        		fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+                        		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 					sprintf(set, "%d", 1);
 					write(fd, set, sizeof(set));
 					close(fd);
 					libKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
                         		return libKernels[id_actual_region].bestThread;
 				case TURBO_ON:
-					fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+					fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 					sprintf(set, "%d", 0);
 					write(fd, set, sizeof(set));
 					close(fd);
@@ -169,7 +169,7 @@ void lib_end_parallel_region(){
                                 break;
                        }
         }
-	fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 	sprintf(set, "%d", 0);
 	write(fd, set, sizeof(set));
 	close(fd);
