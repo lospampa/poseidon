@@ -32,7 +32,7 @@ void lib_init(int metric, int start_search){
         
 	/*Define the turbo core as inactive -- verificar se vai funcionar desta maneira */
 	sprintf(set, "%d", TURBO_ON);
-	fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
+	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 	write(fd, set, sizeof(set));
 	close(fd);      
 }
