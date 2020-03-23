@@ -15,12 +15,14 @@ void lib_init(int metric, int start_search){
         /* Initialization of the variables necessary to perform the search algorithm */
         for(i=0;i<MAX_KERNEL;i++){
                 libKernels[i].numThreads = numCores;
-                libKernels[i].startThreads = 2;
                 libKernels[i].numCores = numCores;
                 libKernels[i].initResult = 0.0;
+		libKernels[i].total_region_perf = 0.0;
+		libKernels[i].total_region_energy = 0.0;
+		libKernels[i].total_region_edp = 0.0;
                 libKernels[i].state = REPEAT;
                 libKernels[i].metric = metric;
-		libKernels[i].bestFreq = TURBO_ON;
+		libKernels[i].bestFreq = TURBO_OFF;
                 idKernels[i]=0;
         }
 
@@ -31,7 +33,7 @@ void lib_init(int metric, int start_search){
         
         
 	/*Define the turbo core as inactive -- verificar se vai funcionar desta maneira */
-	sprintf(set, "%d", TURBO_ON);
+	sprintf(set, "%d", 1);
 	fd = open("/sys/devices/system/cpu/intel_pstate/no_turbo", O_WRONLY);
 	write(fd, set, sizeof(set));
 	close(fd);      
@@ -58,33 +60,34 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         }
         /* Check the state of the search algorithm. */
         switch(libKernels[id_actual_region].state){
-	        case END:
-			if(libKernels[id_actual_region].bestTime > 0.1){
-	                        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-				write(fd, set, sizeof(set));
-				close(fd);
-			}
-               		return libKernels[id_actual_region].bestThreadOn;
-			break;
 		case END_THREADS:
-			if(libKernels[id_actual_region].bestTime > 0.1){
-				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-				write(fd, set, sizeof(set));
-				close(fd);
+                        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+			sprintf(set, "%d", 0);
+			write(fd, set, sizeof(set));
+			close(fd);
+			libKernels[id_actual_region].initResult = omp_get_wtime();
+                        return libKernels[id_actual_region].bestThread;
+	        case END:
+                      	switch(libKernels[id_actual_region].bestFreq){
+				case TURBO_OFF:
+                        		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+					sprintf(set, "%d", 1);
+					write(fd, set, sizeof(set));
+					close(fd);
+					libKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
+                        		return libKernels[id_actual_region].bestThread;
+				case TURBO_ON:
+					fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+					sprintf(set, "%d", 0);
+					write(fd, set, sizeof(set));
+					close(fd);
+					libKernels[id_actual_region].initResult = omp_get_wtime();  /* It is useful only if the continuous adaptation is enable. Otherwise, it can be disabled */
+                        		return libKernels[id_actual_region].bestThread;
+				//case GAME_ON:					
 			}
-               		return libKernels[id_actual_region].bestThreadOn;
-			break;
                 default:
                         lib_start_rapl_sysfs();
                         libKernels[id_actual_region].initResult = omp_get_wtime();
-			if(libKernels[id_actual_region].bestTime > 0.1){
-				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-				write(fd, set, sizeof(set));
-				close(fd);
-			}
                         return libKernels[id_actual_region].numThreads;
         }
 
@@ -92,20 +95,17 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 
 /* It is responsible for performing the search algorithm */
 void lib_end_parallel_region(){
-        double time=0, energy=0, result=0;
-//	int fd;
-//	char set[2];
+        double time, energy, result=0, ratio;
+	int fd;
+	char set[2];
         if(libKernels[id_actual_region].state !=END){
                 /* Check the metric that is being evaluated and collect the results */
                 switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
-				printf("case Performance\n");
-                                result = omp_get_wtime() - libKernels[id_actual_region].initResult;
-				time = result;
+                                time = omp_get_wtime();
+                                result = time - libKernels[id_actual_region].initResult;
                                 break;
                         case ENERGY:
-				printf("case Eenrgy\n");
-				time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                                 result = lib_end_rapl_sysfs();
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.000000 || result < 0){
@@ -114,109 +114,66 @@ void lib_end_parallel_region(){
                                 }
                                 break;
                         case EDP:
-				printf("case EDP\n");
                                 time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                                 energy = lib_end_rapl_sysfs();
                                 result = time * energy;
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.00000 || result < 0){
                                         libKernels[id_actual_region].state = REPEAT;
-                                        libKernels[id_actual_region].metric = PERFORMANCE;
+                                        libKernels[id_actual_region].libMetric = PERFORMANCE;
                                 }
                                 break;
                 }
                 switch(libKernels[id_actual_region].state){
-			case REPEAT:
-				printf("REPEAT = %d %f\n", libKernels[id_actual_region].numThreads, result);
+                        case REPEAT:
+                                libKernels[id_actual_region].numThreads = 2;
 				libKernels[id_actual_region].state = S0;
-				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
-				libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
-				break;
-			case S0:
-				printf("S0 = %d %f\n", libKernels[id_actual_region].numThreads, result);
-				libKernels[id_actual_region].bestResultOn = result;
-				libKernels[id_actual_region].bestTime = time;
-				libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
-				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
-				libKernels[id_actual_region].state = S1;
-				break;
-			case S1:
-				printf("S1 = %d %f\n", libKernels[id_actual_region].numThreads, result);
-				if(result < libKernels[id_actual_region].bestResultOn){
-					libKernels[id_actual_region].bestResultOn = result;
-					libKernels[id_actual_region].bestTime = time;
-					libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
-					if(libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores){
-						libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
-						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
-					}
-					else{
-						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
-						if(libKernels[id_actual_region].pass >= 2){
-							libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
-							libKernels[id_actual_region].state = S2;
-						}else{
-							libKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
-							libKernels[id_actual_region].state = END_THREADS;
-						}
-
-					}
-				}else{
-					if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
-							libKernels[id_actual_region].bestFreq = TURBO_OFF;
-							libKernels[id_actual_region].state = END_THREADS;
-					}else{
-						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
-						if(libKernels[id_actual_region].pass >= 2){
-							libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-							libKernels[id_actual_region].state = S2;
-						}else{
-							libKernels[id_actual_region].bestFreq = TURBO_OFF;
-							libKernels[id_actual_region].state = END_THREADS;
-						}
-					}
-				}
-				break;
-			case S2:
-				printf("S2 = %d %f\n", libKernels[id_actual_region].numThreads, result);
-				if(libKernels[id_actual_region].bestResultOn < result){
-					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
-					if(libKernels[id_actual_region].pass >= 2){
-						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-					}
-					else{
-						libKernels[id_actual_region].bestFreq = TURBO_OFF;
-						libKernels[id_actual_region].state = END_THREADS;
-					}
-				}else{
-					libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
-					libKernels[id_actual_region].bestTime = time;
-					libKernels[id_actual_region].bestResultOn = result;
-					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
-					if(libKernels[id_actual_region].pass >= 2){
-						libKernels[id_actual_region].numThreads += libKernels[id_actual_region].pass;
-					}else{
-						libKernels[id_actual_region].bestFreq = TURBO_OFF;
-						libKernels[id_actual_region].state = END_THREADS;
-					}
-				}
-				break;
-			case END_THREADS:
-				printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
-				libKernels[id_actual_region].state = END;
-				if(result < libKernels[id_actual_region].bestResultOn)
-					libKernels[id_actual_region].bestFreq = TURBO_OFF;
-
-                       		break;
-		
-		
-		}
-	}
-/*	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-	sprintf(set, "%d", TURBO_ON);
+                                break;
+                        case S0:
+                                libKernels[id_actual_region].bestResult = result;
+                                libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
+                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread+2;
+                                libKernels[id_actual_region].state = S1;
+                                break;
+                        case S1:
+                                if(result < libKernels[id_actual_region].bestResult){ //comparing S0 to REPEAT
+                                        libKernels[id_actual_region].bestResult = result;
+                                        libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
+                                        /* if there are opportunities for improvements, then double the number of threads */
+                                        if(libKernels[id_actual_region].numThreads + 2 <= libKernels[id_actual_region].numCores/2){
+                                                libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
+                                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread+2;
+                                                libKernels[id_actual_region].state = S1;
+                                        }else{
+                                                /* It means that the best number so far is equal to the number of cores */
+                                                /* Then, it will realize a guided search near to this number */
+					        libKernels[id_actual_region].state = END_THREADS;
+						/* Activate Turbo Core */
+						libKernels[id_actual_region].bestFreq = TURBO_ON;
+											
+						
+                                        }
+                                }else{
+					libKernels[id_actual_region].state = END_THREADS;
+					libKernels[id_actual_region].bestFreq = TURBO_ON;
+                                }
+                                break;
+                        case END_THREADS:
+                                if(result < libKernels[id_actual_region].bestResult){
+                                        libKernels[id_actual_region].bestFreq = TURBO_ON;
+                                        libKernels[id_actual_region].state = END;
+                                }else{
+                                        libKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                        libKernels[id_actual_region].state = END;
+                                }
+                                break;
+                       }
+        }
+	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+	sprintf(set, "%d", 0);
 	write(fd, set, sizeof(set));
 	close(fd);
-*/
+	
 }
 
 /* It finalizes the environment of Aurora */

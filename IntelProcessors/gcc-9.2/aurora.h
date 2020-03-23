@@ -40,18 +40,19 @@
 #define EDP                     2
 #define POWER                   3
 #define TEMPERATURE             4
-#define TURBO_ON                0
-#define TURBO_OFF               1
+#define TURBO_ON                1
+#define TURBO_OFF               0
 
 
-#define END                     10
-#define END_THREADS             9
-#define END_TURBO               8
-#define S0                      0
-#define S1                      1
-#define S2                      2
-#define S3                      3
-#define REPEAT                  4
+#define END                     110
+#define END_THREADS             109
+#define S0                      100
+#define S1                      101
+#define S2                      102
+#define S3                      103
+#define S4                      104
+#define S5                      105
+#define REPEAT                  106
 
 
 
@@ -75,10 +76,17 @@ typedef struct{
         short int numThreads;
         short int numCores;
         short int bestThread;
+        short int bestThreadOn;
+	short int startThreads;
         short int metric;
         short int state;
-        short int bestFreq;
-        double bestResult, bestTime, initResult, lastResult, total_region_perf, total_region_energy, total_region_edp;
+        int bestFreq;
+	short int pass;
+	short int lastThread;
+	short int idSeq;
+	short int idParAnt;
+	short int idParPos;
+        double bestResult, bestTime, initResult, bestResultOn, bestResultOff, total_energy, total_edp;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
