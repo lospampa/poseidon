@@ -70,6 +70,7 @@ double initGlobalTime = 0.0;
 unsigned long int idKernels[MAX_KERNEL];
 unsigned long int idSequentials[MAX_KERNEL+1];
 short int id_actual_region=0;
+short int id_previous_region=-1;
 short int auroraMetric;
 short int totalKernels=0;
 short int totalSequentials=0;

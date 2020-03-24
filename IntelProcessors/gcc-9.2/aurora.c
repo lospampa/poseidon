@@ -21,6 +21,7 @@ void lib_init(int metric, int start_search){
                 libKernels[i].state = REPEAT;
                 libKernels[i].metric = metric;
 		libKernels[i].bestFreq = TURBO_ON;
+                libKernels[i].idSeq=-1;
                 idKernels[i]=0;
         }
 
@@ -48,50 +49,48 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         /* Find the actual parallel region */
         for(i=0;i<totalKernels;i++){
                 if(idKernels[i] == ptr_region){
-                        id_actual_region = i;
+                        id_actual_region = i;  
                         break;
                 }
         }
 
-
-
         /* If a new parallel region is discovered */
         if(id_actual_region == -1){
                 idKernels[totalKernels] = ptr_region;
-                id_actual_region = totalKernels;
-                totalKernels++;     
-                }
+                id_actual_region = totalKernels; 
+                totalKernels++;                     
+        }        
+         
+        /* Informs the actual parallel region which was the previous parallel region */
+        libKernels[id_actual_region].idParAnt= id_previous_region; 
 
-        //Primeira rodada
-        //id_actual_region = 0
-        //id_actual_sequential = ++id_actual_region
-        //totalSequentials++
-        
-        /*Find the actual sequential region*/
-        for (i = 0; i < totalSequentials; i++){
-                if(idSequentials[i] == id_actual_region+1){
-                                id_actual_sequential = i+1;
-                  //            printf("Essa região sequencial já existe \n");
-                                break;
-                }                
-        
+        /* Informs the previous parallel region which is the next parallel region */
+        if (id_previous_region >= 0){
+                libKernels[id_previous_region].idParPos=id_actual_region;
         }
-        
+
+        /* Find the actual sequential region */
+        for (i = 0; i < totalSequentials; i++){
+               if (idSequentials[i] == libKernels[id_actual_region].idSeq){
+                       id_actual_sequential = libKernels[id_actual_region].idSeq;
+                       break;       
+               }
+        }
 
         /* If a new sequential region is discovered */
-        if (id_actual_region != -1 && id_actual_sequential == -1){
-                //printf("Ok\n");
-                id_actual_sequential=id_actual_region+1;
-                idSequentials[totalSequentials]=id_actual_sequential;
+        if (id_actual_sequential == -1){
+                id_actual_sequential = totalSequentials;
+                idSequentials[totalSequentials] = id_actual_sequential;
+                libKernels[id_actual_sequential].idSeq = id_actual_sequential;
                 totalSequentials++;
-                
         }
-       
 
-        
-        printf("PARALELA ATUAL: %d \n", id_actual_region);
-        printf("SEQUENCIAL PRÓXIMA: %d \n", id_actual_sequential);
-        // id_actual_sequetial = anterior (P0) e proxima (P1) - 1 
+        printf("Seção paralela anterior: %d \n", libKernels[id_actual_region].idParAnt);
+        printf("Seção paralela posterior: %d \n", libKernels[id_previous_region].idParPos);
+        printf("Seção paralela atual: %d \n", id_actual_region);
+        printf("Seção sequencial atual: %d \n", libKernels[id_actual_region].idSeq);
+
+        id_previous_region = id_actual_region;
         /* Check the state of the search algorithm. */
         switch(libKernels[id_actual_region].state){
 	        case END:
