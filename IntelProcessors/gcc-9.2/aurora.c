@@ -30,7 +30,7 @@ void lib_init(int metric, int start_search){
         initGlobalTime = omp_get_wtime();
         
         
-	/*Define the turbo core as inactive -- verificar se vai funcionar desta maneira */
+	/*Define the turbo core as active*/
 	sprintf(set, "%d", TURBO_ON);
 	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 	write(fd, set, sizeof(set));
@@ -43,19 +43,55 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         int i, fd;
 	char set[2];
         id_actual_region = -1;
+        id_actual_sequential = -1;
+
         /* Find the actual parallel region */
         for(i=0;i<totalKernels;i++){
                 if(idKernels[i] == ptr_region){
-                        id_actual_region=i;
+                        id_actual_region = i;
                         break;
                 }
         }
+
+
+
         /* If a new parallel region is discovered */
         if(id_actual_region == -1){
                 idKernels[totalKernels] = ptr_region;
                 id_actual_region = totalKernels;
-                totalKernels++;
+                totalKernels++;     
+                }
+
+        //Primeira rodada
+        //id_actual_region = 0
+        //id_actual_sequential = ++id_actual_region
+        //totalSequentials++
+        
+        /*Find the actual sequential region*/
+        for (i = 0; i < totalSequentials; i++){
+                if(idSequentials[i] == id_actual_region+1){
+                                id_actual_sequential = i+1;
+                  //            printf("Essa região sequencial já existe \n");
+                                break;
+                }                
+        
         }
+        
+
+        /* If a new sequential region is discovered */
+        if (id_actual_region != -1 && id_actual_sequential == -1){
+                //printf("Ok\n");
+                id_actual_sequential=id_actual_region+1;
+                idSequentials[totalSequentials]=id_actual_sequential;
+                totalSequentials++;
+                
+        }
+       
+
+        
+        printf("PARALELA ATUAL: %d \n", id_actual_region);
+        printf("SEQUENCIAL PRÓXIMA: %d \n", id_actual_sequential);
+        // id_actual_sequetial = anterior (P0) e proxima (P1) - 1 
         /* Check the state of the search algorithm. */
         switch(libKernels[id_actual_region].state){
 	        case END:
@@ -99,12 +135,12 @@ void lib_end_parallel_region(){
                 /* Check the metric that is being evaluated and collect the results */
                 switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
-				printf("case Performance\n");
+				//printf("case Performance\n");
                                 result = omp_get_wtime() - libKernels[id_actual_region].initResult;
 				time = result;
                                 break;
                         case ENERGY:
-				printf("case Eenrgy\n");
+				//printf("case Eenrgy\n");
 				time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                                 result = lib_end_rapl_sysfs();
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
@@ -114,7 +150,7 @@ void lib_end_parallel_region(){
                                 }
                                 break;
                         case EDP:
-				printf("case EDP\n");
+				//printf("case EDP\n");
                                 time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                                 energy = lib_end_rapl_sysfs();
                                 result = time * energy;
@@ -127,13 +163,13 @@ void lib_end_parallel_region(){
                 }
                 switch(libKernels[id_actual_region].state){
 			case REPEAT:
-				printf("REPEAT = %d %f\n", libKernels[id_actual_region].numThreads, result);
+				//printf("REPEAT = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				libKernels[id_actual_region].state = S0;
 				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
-				libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
+				libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
 				break;
 			case S0:
-				printf("S0 = %d %f\n", libKernels[id_actual_region].numThreads, result);
+				//printf("S0 = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				libKernels[id_actual_region].bestResultOn = result;
 				libKernels[id_actual_region].bestTime = time;
 				libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
@@ -141,7 +177,7 @@ void lib_end_parallel_region(){
 				libKernels[id_actual_region].state = S1;
 				break;
 			case S1:
-				printf("S1 = %d %f\n", libKernels[id_actual_region].numThreads, result);
+				//printf("S1 = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				if(result < libKernels[id_actual_region].bestResultOn){
 					libKernels[id_actual_region].bestResultOn = result;
 					libKernels[id_actual_region].bestTime = time;
@@ -178,7 +214,7 @@ void lib_end_parallel_region(){
 				}
 				break;
 			case S2:
-				printf("S2 = %d %f\n", libKernels[id_actual_region].numThreads, result);
+				//printf("S2 = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				if(libKernels[id_actual_region].bestResultOn < result){
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
 					if(libKernels[id_actual_region].pass >= 2){
@@ -202,7 +238,7 @@ void lib_end_parallel_region(){
 				}
 				break;
 			case END_THREADS:
-				printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
+				//printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
 				libKernels[id_actual_region].state = END;
 				if(result < libKernels[id_actual_region].bestResultOn)
 					libKernels[id_actual_region].bestFreq = TURBO_OFF;

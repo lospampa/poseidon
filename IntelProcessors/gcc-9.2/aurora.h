@@ -33,7 +33,7 @@
 
 /*define AURORA environment*/
 
-#define MAX_KERNEL              61
+#define MAX_KERNEL              61 // Matheus: O que é isso?
 #define MAX_THREADS             32
 #define PERFORMANCE             0
 #define ENERGY                  1
@@ -68,9 +68,12 @@ char tempfile[256];
 int valid[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 double initGlobalTime = 0.0;
 unsigned long int idKernels[MAX_KERNEL];
+unsigned long int idSequentials[MAX_KERNEL+1];
 short int id_actual_region=0;
 short int auroraMetric;
 short int totalKernels=0;
+short int totalSequentials=0;
+short int id_actual_sequential=0;
 
 typedef struct{
         short int numThreads;
