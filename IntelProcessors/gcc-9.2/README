@@ -1,8 +1,8 @@
 
 I. File list
 -------------
-aurora.c		Aurora functions implementation		
-aurora.h		Aurora header
+aurora.c		Poseidon functions implementation		
+aurora.h		Poseidon header
 env.c			OpenMP internal controler variables
 libgomp.h 		libgomp header
 libgomp_g.h 		libgomp header
@@ -12,7 +12,7 @@ Makefile.am		OpenMP libgomp makefile.am
 
 
 
-II. Installing Aurora
+II. Installing Poseidon
 ---------------------
 
 A. Copy all files into the libgomp directory: 
@@ -24,17 +24,17 @@ B. Make && Make install:
 
 
 
-III. Using Aurora
+III. Using Poseidon
 -----------------
 
 A. Export PATH:
 		- $export LD_LIBRARY_PATH=/path-to-gcc-bin/lib64:$LD_LIBRARY_PATH
 
 B. Setting the optimization metric:
-		- $export OMP_AURORA=
+		- $export OMP_POSEIDON=
 			* PERFORMANCE or performance;
 			* ENERGY or energy;
 			* EDP or edp;
 
 C. Defining the number of threads that will start the search algorithm:
-	- OMP_AURORA_START_SEARCH: NUM_THREADS
+	- OMP_POSEIDON_START_SEARCH: NUM_THREADS

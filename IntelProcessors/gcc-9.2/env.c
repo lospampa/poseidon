@@ -213,30 +213,30 @@ parse_schedule (void)
 static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
         char *env = getenv(name);
         if(env == NULL){
-                printf("Poseidon: Disabled\n");
+                printf("POSEIDON: Disabled\n");
                 lib_init(3,0);
                 *pvalue = -1;
                 return false;
         }
         if( (strcmp("performance",env) == 0) || (strcmp("PERFORMANCE",env) == 0)){
-                printf("Poseidon - OpenMP Application Optimized for Performance\n");
+                printf("POSEIDON - OpenMP Application Optimized for Performance\n");
                 *pvalue = 0;
         }
         else if( (strcmp("energy",env) == 0) || (strcmp("ENERGY",env) == 0)){
-                printf("Poseidon - OpenMP Application Optimized for energy\n");
+                printf("POSEIDON - OpenMP Application Optimized for energy\n");
                 *pvalue = 1;
         }
         else if( (strcmp("edp",env) == 0) || (strcmp("EDP",env) == 0)){
-                printf("Poseidon - OpenMP Application Optimized for EDP\n");
+                printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
         }else{
-                printf("Poseidon - Optimization not recognized!\n");
+                printf("POSEIDON - Optimization not recognized!\n");
                 printf(" -- OpenMP Application Optimized for Performance by default\n");
                 *pvalue = 0;
                 printf("\n\t\tPlease:\n");
-                printf("\t\tTo optimize performance: export OMP_AURORA=PERFORMANCE or export OMP_AURORA=performance\n");
-                printf("\t\tTo optimize energy: export OMP_AURORA=ENERGY or export OMP_AURORA=energy\n");
-                printf("\t\tTo optimize edp: export OMP_AURORA=EDP or export OMP_AURORA=edp\n");
+                printf("\t\tTo optimize performance: export OMP_POSEIDON=PERFORMANCE or export OMP_POSEIDON=performance\n");
+                printf("\t\tTo optimize energy: export OMP_POSEIDON=ENERGY or export OMP_POSEIDON=energy\n");
+                printf("\t\tTo optimize edp: export OMP_POSEIDON=EDP or export OMP_POSEIDON=edp\n");
         }
 		
 
@@ -1353,9 +1353,9 @@ initialize_env (void)
   parse_int ("OMP_DEFAULT_DEVICE", &gomp_global_icv.default_device_var, true);
   parse_int ("OMP_MAX_TASK_PRIORITY", &gomp_max_task_priority_var, true);
 
-  parse_lib("OMP_AURORA", &gomp_global_icv.lib_var,true);
+  parse_lib("OMP_POSEIDON", &gomp_global_icv.lib_var,true);
 if(gomp_global_icv.lib_var != -1){
-        parse_int("OMP_AURORA_START_SEARCH", &gomp_global_icv.lib_start_search, true);
+        parse_int("OMP_POSEIDON_START_SEARCH", &gomp_global_icv.lib_start_search, true);
           lib_init(gomp_global_icv.lib_var, gomp_global_icv.lib_start_search);
    }
 
