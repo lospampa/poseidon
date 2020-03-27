@@ -34,10 +34,8 @@
 #define EDP                     2
 #define POWER		        3
 #define TEMPERATURE             4
-#define TURBO_ON		0
-#define TURBO_OFF		1
-#define GAME_ON			2
-#define GAME_OFF		3
+#define TURBO_ON		1
+#define TURBO_OFF		0
 
 
 
@@ -62,27 +60,34 @@ char tempfile[256];
 double initGlobalTime = 0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
+short int id_previous_region=-1;
 short int auroraMetric;
 short int totalKernels=0;
+short int totalSequentials=0;
+short int id_actual_sequential=0;
 short int auroraTotalPackages=0;
 short int auroraTotalCores=0;
+
 
 typedef struct{
         short int numThreads;
         short int numCores;
         short int bestThread;
+        short int bestThreadOn;
+        short int startThreads;
         short int auroraMetric;
         short int state;
-        short int lastThread;
-        short int startThreads;
-	short int bestTurbo;
-	short int bestGame;
-	int steps;
+        int bestFreq;
+        int bestFreqSeq;
         short int pass;
-        double bestResult, initResult, lastResult, bestTime, total_region_perf;
+        short int lastThread;
+        short int idSeq;
+        short int idParAnt;
+        short int idParPos;
+	int steps;
+        double bestResult, bestTime, initResult, lastResult, total_energy, total_edp, startSeq, endSeq, total_region_perf;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];
-	
 }typeFrame;
 
 typeFrame auroraKernels[MAX_KERNEL];

@@ -127,9 +127,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                         return libKernels[id_actual_region].numThreads; 
         }      
 }
-// Modificação - 523s
-// Modificação inversa - 483s
-// Sem modificação - 483s
+
 
 /* It is responsible for performing the search algorithm */
 void lib_end_parallel_region(){
@@ -272,9 +270,9 @@ void lib_destructor(){
         id_actual_region = MAX_KERNEL-1;
         float energy = lib_end_rapl_sysfs();
         float edp = time * energy;
-        printf("LIB - Execution Time: %.5f seconds\n", time);
-        printf("LIB - Energy: %.5f joules\n",energy);
-        printf("LIB - EDP: %.5f\n",edp);
+        printf("Poseidon - Execution Time: %.5f seconds\n", time);
+        printf("Poseidon - Energy: %.5f joules\n",energy);
+        printf("Poseidon - EDP: %.5f\n", edp);
 }
 
 /* Function used by the Intel RAPL to detect the CPU Architecture*/

@@ -78,10 +78,6 @@ short int totalSequentials=0;
 short int id_actual_sequential=0;
 
 typedef struct{
-        
-        
-        // bestFreq - bestTime (bestResult) - bestResultOn, bestResultOff, total_energy, total edp
-        // 
         short int numThreads;
         short int numCores;
         short int bestThread;
@@ -97,7 +93,6 @@ typedef struct{
 	short int idParAnt;
 	short int idParPos;
         double bestResult, bestTime, initResult, total_energy, total_edp, startSeq, endSeq;
-        //double bestResultOff, bestResultOn
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;

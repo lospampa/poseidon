@@ -213,24 +213,24 @@ parse_schedule (void)
 static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
         char *env = getenv(name);
         if(env == NULL){
-                printf("AURORA: Disabled\n");
+                printf("Poseidon: Disabled\n");
                 lib_init(3,0);
                 *pvalue = -1;
                 return false;
         }
         if( (strcmp("performance",env) == 0) || (strcmp("PERFORMANCE",env) == 0)){
-                printf("LIB - OpenMP Application Optimized for Performance\n");
+                printf("Poseidon - OpenMP Application Optimized for Performance\n");
                 *pvalue = 0;
         }
         else if( (strcmp("energy",env) == 0) || (strcmp("ENERGY",env) == 0)){
-                printf("LIB - OpenMP Application Optimized for energy\n");
+                printf("Poseidon - OpenMP Application Optimized for energy\n");
                 *pvalue = 1;
         }
         else if( (strcmp("edp",env) == 0) || (strcmp("EDP",env) == 0)){
-                printf("LIB - OpenMP Application Optimized for EDP\n");
+                printf("Poseidon - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
         }else{
-                printf("LIB - Optimization not recognized!\n");
+                printf("Poseidon - Optimization not recognized!\n");
                 printf(" -- OpenMP Application Optimized for Performance by default\n");
                 *pvalue = 0;
                 printf("\n\t\tPlease:\n");
