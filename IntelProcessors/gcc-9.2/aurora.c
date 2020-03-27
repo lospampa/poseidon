@@ -136,7 +136,6 @@ void lib_end_parallel_region(){
         double time=0, energy=0, result=0, open_file_threshold=0.001138;
 	int fd;
 	char set[2];
-        libKernels[id_actual_region].startSeq = omp_get_wtime();
         if(libKernels[id_actual_region].state !=END){
                 /* Check the metric that is being evaluated and collect the results */
                 switch(libKernels[id_actual_region].metric){
@@ -255,13 +254,14 @@ void lib_end_parallel_region(){
         }
 
         if (libKernels[id_previous_region].endSeq > open_file_threshold && id_previous_region > -1){
-                        //printf("MODO TURBO ATIVADO \n");
+                        //printf("Tempo de execução sequencial: %lf\n", libKernels[id_previous_region].endSeq);
                         libKernels[id_previous_region].bestFreqSeq = TURBO_ON;
                         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 		        sprintf(set, "%d", TURBO_ON);
 		        write(fd, set, sizeof(set));
 		        close(fd);
                 }
+        libKernels[id_actual_region].startSeq = omp_get_wtime();
         id_previous_region = id_actual_region;
 }
 
