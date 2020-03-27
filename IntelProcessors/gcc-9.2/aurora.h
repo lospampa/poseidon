@@ -31,6 +31,7 @@
 #define MAX_PACKAGES            4 //16
 
 
+
 /*define AURORA environment*/
 
 #define MAX_KERNEL              61 // Matheus: O que é isso?
@@ -77,6 +78,10 @@ short int totalSequentials=0;
 short int id_actual_sequential=0;
 
 typedef struct{
+        
+        
+        // bestFreq - bestTime (bestResult) - bestResultOn, bestResultOff, total_energy, total edp
+        // 
         short int numThreads;
         short int numCores;
         short int bestThread;
@@ -85,12 +90,14 @@ typedef struct{
         short int metric;
         short int state;
         int bestFreq;
+        int bestFreqSeq;
 	short int pass;
 	short int lastThread;
 	short int idSeq;
 	short int idParAnt;
 	short int idParPos;
-        double bestResult, bestTime, initResult, bestResultOn, bestResultOff, total_energy, total_edp;
+        double bestResult, bestTime, initResult, total_energy, total_edp, startSeq, endSeq;
+        //double bestResultOff, bestResultOn
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
