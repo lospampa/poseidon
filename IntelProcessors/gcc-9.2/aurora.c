@@ -26,6 +26,7 @@ void lib_init(int metric, int start_search){
                 libKernels[i].startSeq=0;
                 libKernels[i].endSeq=0;
                 idKernels[i] = 0;
+		idSequentials[i] = 0;
                 
         }
 

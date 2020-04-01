@@ -9,7 +9,7 @@ void aurora_init(int aurora, int start_search)
 	char set[2];
 	int numCores = sysconf(_SC_NPROCESSORS_ONLN);
 	/*Initialization of RAPL */
-	aurora_detect_cpu();
+	//aurora_detect_cpu();
 	aurora_detect_packages();
 	/*End initialization of RAPL */
 
@@ -24,9 +24,10 @@ void aurora_init(int aurora, int start_search)
 		auroraKernels[i].bestFreq = TURBO_ON;
 		auroraKernels[i].idSeq = -1;
 		auroraKernels[i].bestFreqSeq = -1;
-		//auroraKernels[i].auroraMetric = auroraMetric;
-		auroraKernels[i].auroraMetric = aurora;
+		//auroraKernels[i].auroraauroraMetric = auroraauroraMetric;
+		auroraKernels[i].auroraauroraMetric = aurora;
 		idKernels[i] = 0;
+                idSequentials[i] = 0;
 	}
 
 	/* Start the counters for energy and time for all the application execution */
@@ -144,8 +145,8 @@ void aurora_end_parallel_region(){
 	int fd;
 	char set[2];
         if(auroraKernels[id_actual_region].state !=END){
-                /* Check the metric that is being evaluated and collect the results */
-                switch(auroraKernels[id_actual_region].metric){
+                /* Check the auroraMetric that is being evaluated and collect the results */
+                switch(auroraKernels[id_actual_region].auroraMetric){
                         case PERFORMANCE:
 				//printf("case Performance\n");
                                 result = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
@@ -155,10 +156,10 @@ void aurora_end_parallel_region(){
 				//printf("case Eenrgy\n");
 				time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
                                 result = aurora_end_amd_msr();
-                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
+                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the auroraMetric changes to performance */
                                 if(result == 0.000000 || result < 0){
                                         auroraKernels[id_actual_region].state = REPEAT;
-                                        auroraKernels[id_actual_region].metric = PERFORMANCE;
+                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
                                 }
                                 break;
                         case EDP:
@@ -166,10 +167,10 @@ void aurora_end_parallel_region(){
                                 time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
                                 energy = aurora_end_amd_msr();
                                 result = time * energy;
-                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
+                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the auroraMetric changes to performance */
                                 if(result == 0.00000 || result < 0){
                                         auroraKernels[id_actual_region].state = REPEAT;
-                                        auroraKernels[id_actual_region].metric = PERFORMANCE;
+                                        auroraKernels[id_actual_region].auroraMetric = PERFORMANCE;
                                 }
                                 break;
                 }
