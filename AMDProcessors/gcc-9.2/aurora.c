@@ -24,8 +24,8 @@ void aurora_init(int aurora, int start_search)
 		auroraKernels[i].bestFreq = TURBO_ON;
 		auroraKernels[i].idSeq = -1;
 		auroraKernels[i].bestFreqSeq = -1;
-		//auroraKernels[i].auroraauroraMetric = auroraauroraMetric;
-		auroraKernels[i].auroraauroraMetric = aurora;
+		//auroraKernels[i].auroraMetric = auroraMetric;
+		auroraKernels[i].auroraMetric = aurora;
 		idKernels[i] = 0;
                 idSequentials[i] = 0;
 	}
@@ -125,7 +125,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 		return auroraKernels[id_actual_region].bestThreadOn;
 		break;
 	default:
-		lib_start_rapl_sysfs();
+		aurora_start_amd_msr();
 		auroraKernels[id_actual_region].initResult = omp_get_wtime();
 		if (auroraKernels[id_actual_region].bestTime > 0.1)
 		{
