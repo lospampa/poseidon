@@ -22,6 +22,8 @@ void aurora_init(int aurora, int start_search)
 		auroraKernels[i].initResult = 0.0;
 		auroraKernels[i].state = REPEAT;
 		auroraKernels[i].bestFreq = TURBO_ON;
+		auroraKernels[i].timeTurboOff = 0.0;
+		auroraKernels[i].timeTurboOn = 0.0;
 		auroraKernels[i].idSeq = -1;
 		auroraKernels[i].bestFreqSeq = -1;
 		//auroraKernels[i].auroraMetric = auroraMetric;
@@ -206,6 +208,7 @@ void aurora_end_parallel_region(){
 							auroraKernels[id_actual_region].state = S2;
 						}else{
 							auroraKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
+							auroraKernels[id_actual_region].timeTurboOn = time;
 							auroraKernels[id_actual_region].state = END_THREADS;
 						}
 
@@ -213,6 +216,7 @@ void aurora_end_parallel_region(){
 				}else{
 					if(auroraKernels[id_actual_region].bestThreadOn == auroraKernels[id_actual_region].numCores/2){
 							auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
+							auroraKernels[id_actual_region].timeTurboOn = time;
 							auroraKernels[id_actual_region].state = END_THREADS;
 					}else{
 						auroraKernels[id_actual_region].pass = auroraKernels[id_actual_region].lastThread/2;
@@ -221,6 +225,7 @@ void aurora_end_parallel_region(){
 							auroraKernels[id_actual_region].state = S2;
 						}else{
 							auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
+							auroraKernels[id_actual_region].timeTurboOn = time;
 							auroraKernels[id_actual_region].state = END_THREADS;
 						}
 					}
@@ -235,6 +240,7 @@ void aurora_end_parallel_region(){
 					}
 					else{
 						auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
+						auroraKernels[id_actual_region].timeTurboOn = time;
 						auroraKernels[id_actual_region].state = END_THREADS;
 					}
 				}else{
@@ -246,6 +252,7 @@ void aurora_end_parallel_region(){
 						auroraKernels[id_actual_region].numThreads += auroraKernels[id_actual_region].pass;
 					}else{
 						auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
+						auroraKernels[id_actual_region].timeTurboOn = time;
 						auroraKernels[id_actual_region].state = END_THREADS;
 					}
 				}
@@ -253,6 +260,7 @@ void aurora_end_parallel_region(){
 			case END_THREADS:
 				//printf("END_THREADS = %d %f\n", auroraKernels[id_actual_region].bestThreadOn, result);
 				auroraKernels[id_actual_region].state = END;
+				auroraKernels[id_actual_region].timeTurboOff = time;
 				if(result < auroraKernels[id_actual_region].bestResult)
 					auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
 
