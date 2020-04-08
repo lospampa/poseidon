@@ -87,6 +87,7 @@ typedef struct{
         short int idParPos;
 	int steps;
         double bestResult, bestTime, initResult, lastResult, total_energy, total_edp, startSeq, endSeq, total_region_perf;
+	double timeTurboOff, timeTurboON;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];
 }typeFrame;
