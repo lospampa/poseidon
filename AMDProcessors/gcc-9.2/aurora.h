@@ -50,6 +50,11 @@
 
 
 
+#define INITIAL               7
+#define END_TURBO_ON          5    
+#define END_TURBO_OFF         12           
+
+
 
 
 /*global variables*/
@@ -58,6 +63,7 @@ static int package_map[MAX_PACKAGES];
 char packname[MAX_PACKAGES][256];
 char tempfile[256];
 double initGlobalTime = 0.0;
+double write_file_threshold=0.001138;
 unsigned long int idKernels[MAX_KERNEL];
 unsigned long int idSequentials[MAX_KERNEL+1];
 short int id_actual_region=0;
@@ -70,6 +76,7 @@ short int auroraTotalPackages=0;
 short int auroraTotalCores=0;
 
 
+
 typedef struct{
         short int numThreads;
         short int numCores;
@@ -78,6 +85,7 @@ typedef struct{
         short int startThreads;
         short int auroraMetric;
         short int state;
+        short int seqState;
         int bestFreq;
         int bestFreqSeq;
         short int pass;
@@ -86,8 +94,8 @@ typedef struct{
         short int idParAnt;
         short int idParPos;
 	int steps;
-        double bestResult, bestTime, initResult, lastResult, total_energy, total_edp, startSeq, endSeq, total_region_perf;
-	double timeTurboOff, timeTurboOn;
+        double bestResult, bestTime, initResult, lastResult, total_energy, total_edp, initSeqTime, endSeqTime, total_region_perf;
+	double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];
 }typeFrame;
