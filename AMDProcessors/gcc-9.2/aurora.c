@@ -129,7 +129,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	switch (auroraKernels[id_actual_region].state)
 	{
 	case END:
-                if(auroraKernels[id_previous_region].bestFreqSeq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq = TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)){
+                if(auroraKernels[id_previous_region].bestFreqSeq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq == TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)){
                         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			sprintf(set, "%d", auroraKernels[id_actual_region].bestFreq);
 			write(fd, set, sizeof(set));
@@ -297,16 +297,15 @@ void aurora_end_parallel_region(){
 	 
         }
 
-                if (id_previous_region > -1){
-                        //printf("Tempo de execução sequencial: %lf\n", auroraKernels[id_previous_region].endSeq);
-                        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-		        sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
-		        write(fd, set, sizeof(set));
-		        close(fd);
-                }
+        if (id_previous_region > -1){
+                fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+        	sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
+	        write(fd, set, sizeof(set));
+	        close(fd);
+        }
 
         id_previous_region = id_actual_region;
-        auroraKernels[id_actual_region].initSeq = omp_get_wtime();
+        auroraKernels[id_actual_region].initSeqTime = omp_get_wtime();
 }
 
 /* It finalizes the environment of Aurora */
