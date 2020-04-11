@@ -50,9 +50,8 @@
 
 
 
-#define INITIAL               7
-#define END_TURBO_ON          5    
-#define END_TURBO_OFF         12           
+#define INITIAL                 7
+#define END_SEQUENTIAL          5    
 
 
 
