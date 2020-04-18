@@ -24,7 +24,7 @@ void aurora_init(int aurora, int start_search)
 		auroraKernels[i].bestFreq = TURBO_ON;
                 auroraKernels[i].bestFreqSeq = TURBO_ON;
 		auroraKernels[i].timeTurboOff = 0.0;
-		auroraKernels[i].timeTurboOn = 0.0;,
+		auroraKernels[i].timeTurboOn = 0.0;
 		auroraKernels[i].idSeq = -1;
 		auroraKernels[i].bestFreqSeq = -1;
                 auroraKernels[i].seqState = INITIAL;
@@ -55,16 +55,12 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	id_actual_region = -1;
 	id_actual_sequential = -1;
 
-        
         if (id_previous_region > -1)
 	{
-		time = omp_get_wtime() - auroraKernels[id_previous_region].initSeqTime;
-                // auroraKernels[id_previous_region].bestSeqResult = 
+		time = omp_get_wtime() - auroraKernels[id_previous_region].initSeqTime; 
                 switch (auroraKernels[id_previous_region].seqState)
                 {
                 case INITIAL:
-                        printf("Testou com turbo ON");
-                        printf("Iniciando teste com turbo off"); 
                         auroraKernels[id_previous_region].timeSeqTurboOn = time;
                         auroraKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
                         auroraKernels[id_previous_region].seqState = END_TURBO;
@@ -72,17 +68,10 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
                 break;
                 case END_TURBO:
                         auroraKernels[id_previous_region].timeSeqTurboOff = time;
-                        if (auroraKernels[id_previous_region].timeSeqTurboOff < auroraKernels[id_previous_region].timeSeqTurboOn)
-                        {
-                                printf("MODO TURBO DESATIVADO SELECIONADO");
-                                auroraKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
-                        }else{
-                                printf("MODO TURBO ATIVADO SELECIONADO");
-                                auroraKernels[id_previous_region].bestFreqSeq = TURBO_ON;
-                        }
-                        auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;       
+                        auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;
                 break;
-        } 
+		}
+        }
 
 	/* Find the actual parallel region */
 	for (i = 0; i < totalKernels; i++)
@@ -299,36 +288,32 @@ void aurora_end_parallel_region(){
 
                        		break;
 		}
-	 
+
         }
-                
-        if (id_previous_region > -1 && auroraKernels[id_actual_region].bestFreq != auroraKernels[id_actual_region].bestFreqSeq){
+
+        if (auroraKernels[id_actual_region].bestFreq != auroraKernels[id_actual_region].bestFreqSeq && auroraKernels[id_actual_region].seqState != END_SEQUENTIAL){
                 fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         	sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
 	        write(fd, set, sizeof(set));
 	        close(fd);
-        } 
+        }
 
         if (auroraKernels[id_actual_region].seqState == END_SEQUENTIAL)
         {
                if(auroraKernels[id_actual_region].bestFreq == TURBO_OFF && auroraKernels[id_actual_region].bestFreqSeq == TURBO_ON && (auroraKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff)){
-                        printf("ATIVOU o turbo na Região Sequencial %d\n", id_actual_region);
                         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
 			write(fd, set, sizeof(set));
 			close(fd);
                 }
-                
+
                 if(auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOn)){
-                        printf("DESATIVOU o turbo na Região Sequencial %d\n", id_actual_region);
                         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
 			write(fd, set, sizeof(set));
 			close(fd);
                 }
         }
-
-        printf("Região anterior: %d\n", id_previous_region);
         id_previous_region = id_actual_region;
         auroraKernels[id_actual_region].initSeqTime = omp_get_wtime();
 }
