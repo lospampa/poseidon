@@ -26,7 +26,6 @@ void aurora_init(int aurora, int start_search)
 		auroraKernels[i].timeTurboOff = 0.0;
 		auroraKernels[i].timeTurboOn = 0.0;
 		auroraKernels[i].idSeq = -1;
-		auroraKernels[i].bestFreqSeq = -1;
                 auroraKernels[i].seqState = INITIAL;
 		//auroraKernels[i].auroraMetric = auroraMetric;
 		auroraKernels[i].auroraMetric = aurora;
