@@ -296,8 +296,6 @@ void aurora_end_parallel_region(){
                 case PASS:
                         auroraKernels[id_actual_region].seqState = INITIAL;
                         break;
-                case
-
 	}
 	id_previous_region = id_actual_region;
         initSeqTime = omp_get_wtime();
