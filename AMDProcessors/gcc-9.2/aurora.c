@@ -49,27 +49,24 @@ void aurora_init(int aurora, int start_search)
 int aurora_resolve_num_threads(uintptr_t ptr_region)
 {
 	int i, fd;
+        int seqTime;
 	char set[2];
-        int time;
 	id_actual_region = -1;
 	id_actual_sequential = -1;
-
-        if (id_previous_region > -1)
-	{
-		time = omp_get_wtime() - auroraKernels[id_previous_region].initSeqTime; 
-                switch (auroraKernels[id_previous_region].seqState)
-                {
+        
+        seqTime = omp_get_wtime() - initSeqTime;
+        switch (auroraKernels[id_previous_region].seqState)
+        {
                 case INITIAL:
-                        auroraKernels[id_previous_region].timeSeqTurboOn = time;
-                        auroraKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
-                        auroraKernels[id_previous_region].seqState = END_TURBO;
+                auroraKernels[id_previous_region].timeSeqTurboOn = seqTime;
+                auroraKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
+                auroraKernels[id_previous_region].seqState = END_TURBO;
 
                 break;
-                case END_TURBO:
-                        auroraKernels[id_previous_region].timeSeqTurboOff = time;
-                        auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;
+        case END_TURBO:
+                auroraKernels[id_previous_region].timeSeqTurboOff = seqTime;
+                auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;
                 break;
-		}
         }
 
 	/* Find the actual parallel region */
@@ -90,14 +87,10 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 		totalKernels++;
 	}
 
-	/* Informs the actual parallel region which was the previous parallel region */
+	/* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
 	auroraKernels[id_actual_region].idParAnt = id_previous_region;
-
-	/* Informs the previous parallel region which is the next parallel region */
-	if (id_previous_region >= 0)
-	{
-		auroraKernels[id_previous_region].idParPos = id_actual_region;
-	}
+	auroraKernels[id_previous_region].idParPos = id_actual_region;
+	
 
 	/* Find the actual sequential region */
 	for (i = 0; i < totalSequentials; i++)
@@ -122,19 +115,12 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	switch (auroraKernels[id_actual_region].state)
 	{
 	case END:
-                if(auroraKernels[id_previous_region].bestFreqSeq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq == TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)){
+                if((auroraKernels[id_previous_region].bestFreqSeq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq == TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)) || (auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn))){
                         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			sprintf(set, "%d", auroraKernels[id_actual_region].bestFreq);
 			write(fd, set, sizeof(set));
 			close(fd);
                 }
-                if(auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn)){
-                        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-			sprintf(set, "%d", auroraKernels[id_actual_region].bestFreq);
-			write(fd, set, sizeof(set));
-			close(fd);
-                }
-
 		return auroraKernels[id_actual_region].bestThreadOn;
 		break;
 	case END_THREADS:
@@ -300,23 +286,21 @@ void aurora_end_parallel_region(){
 			}
 			break;
 		case END_SEQUENTIAL:
-			if(auroraKernels[id_actual_region].bestFreq == TURBO_OFF && auroraKernels[id_actual_region].bestFreqSeq == TURBO_ON && (auroraKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff)){
+			if((auroraKernels[id_actual_region].bestFreq == TURBO_OFF && auroraKernels[id_actual_region].bestFreqSeq == TURBO_ON && (auroraKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff)) || (auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOn))){
                         	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 				sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
 				write(fd, set, sizeof(set));
 				close(fd);
                 	}
+                        break;
+                case PASS:
+                        auroraKernels[id_actual_region].seqState = INITIAL;
+                        break;
+                case
 
-			if(auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOn)){
-                        	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-				sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
-				write(fd, set, sizeof(set));
-				close(fd);
-                	}
-			break;
 	}
 	id_previous_region = id_actual_region;
-        auroraKernels[id_actual_region].initSeqTime = omp_get_wtime();
+        initSeqTime = omp_get_wtime();
 }
 
 /* It finalizes the environment of Aurora */

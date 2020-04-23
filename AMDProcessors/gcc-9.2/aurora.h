@@ -52,7 +52,7 @@
 
 #define INITIAL                 7
 #define END_SEQUENTIAL          5    
-
+#define PASS                    12
 
 
 
@@ -63,6 +63,7 @@ char packname[MAX_PACKAGES][256];
 char tempfile[256];
 double initGlobalTime = 0.0;
 double write_file_threshold=0.001138;
+double initSeqTime;
 unsigned long int idKernels[MAX_KERNEL];
 unsigned long int idSequentials[MAX_KERNEL+1];
 short int id_actual_region=0;
@@ -93,7 +94,7 @@ typedef struct{
         short int idParAnt;
         short int idParPos;
 	int steps;
-        double bestResult, bestTime, initResult, lastResult, total_energy, total_edp, initSeqTime, endSeqTime, total_region_perf;
+        double bestResult, bestTime, initResult, lastResult, total_energy, total_edp, total_region_perf;
 	double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];
