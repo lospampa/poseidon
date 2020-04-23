@@ -37,6 +37,7 @@ void aurora_init(int aurora, int start_search)
 	id_actual_region = MAX_KERNEL - 1;
 	aurora_start_amd_msr();
 	initGlobalTime = omp_get_wtime();
+        initSeqTime = 0;
 
 	/*Define the turbo core as active*/
 	sprintf(set, "%d", TURBO_ON);
@@ -84,32 +85,14 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	{
 		idKernels[totalKernels] = ptr_region;
 		id_actual_region = totalKernels;
+                auroraKernels[id_actual_region].idSeq = id_actual_region + 1;
 		totalKernels++;
 	}
 
 	/* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
 	auroraKernels[id_actual_region].idParAnt = id_previous_region;
 	auroraKernels[id_previous_region].idParPos = id_actual_region;
-	
 
-	/* Find the actual sequential region */
-	for (i = 0; i < totalSequentials; i++)
-	{
-		if (idSequentials[i] == auroraKernels[id_actual_region].idSeq)
-		{
-			id_actual_sequential = auroraKernels[id_actual_region].idSeq;
-			break;
-		}
-	}
-
-	/* If a new sequential region is discovered */
-	if (id_actual_sequential == -1)
-	{
-		id_actual_sequential = totalSequentials;
-		idSequentials[totalSequentials] = id_actual_sequential;
-		auroraKernels[id_actual_sequential].idSeq = id_actual_sequential;
-		totalSequentials++;
-	}
 
 	/* Check the state of the search algorithm. */
 	switch (auroraKernels[id_actual_region].state)
@@ -249,7 +232,7 @@ void aurora_end_parallel_region(){
 						auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
 						auroraKernels[id_actual_region].timeTurboOn = time;
 						auroraKernels[id_actual_region].state = END_THREADS;
-					}
+					}0
 				}else{
 					auroraKernels[id_actual_region].bestThreadOn = auroraKernels[id_actual_region].numThreads;
 					auroraKernels[id_actual_region].bestTime = time;
