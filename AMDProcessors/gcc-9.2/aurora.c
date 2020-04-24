@@ -30,7 +30,6 @@ void aurora_init(int aurora, int start_search)
 		//auroraKernels[i].auroraMetric = auroraMetric;
 		auroraKernels[i].auroraMetric = aurora;
 		idKernels[i] = 0;
-                idSequentials[i] = 0;
 	}
 
 	/* Start the counters for energy and time for all the application execution */
@@ -54,7 +53,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	char set[2];
 	id_actual_region = -1;
 	id_actual_sequential = -1;
-        
+
         seqTime = omp_get_wtime() - initSeqTime;
         switch (auroraKernels[id_previous_region].seqState)
         {
@@ -232,7 +231,7 @@ void aurora_end_parallel_region(){
 						auroraKernels[id_actual_region].bestFreq = TURBO_OFF;
 						auroraKernels[id_actual_region].timeTurboOn = time;
 						auroraKernels[id_actual_region].state = END_THREADS;
-					}0
+					}
 				}else{
 					auroraKernels[id_actual_region].bestThreadOn = auroraKernels[id_actual_region].numThreads;
 					auroraKernels[id_actual_region].bestTime = time;
