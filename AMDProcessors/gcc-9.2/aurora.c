@@ -36,7 +36,6 @@ void aurora_init(int aurora, int start_search)
 	id_actual_region = MAX_KERNEL - 1;
 	aurora_start_amd_msr();
 	initGlobalTime = omp_get_wtime();
-        initSeqTime = 0;
 
 	/*Define the turbo core as active*/
 	sprintf(set, "%d", TURBO_ON);
@@ -49,26 +48,25 @@ void aurora_init(int aurora, int start_search)
 int aurora_resolve_num_threads(uintptr_t ptr_region)
 {
 	int i, fd;
-        int seqTime;
 	char set[2];
 	id_actual_region = -1;
 	id_actual_sequential = -1;
 
-        seqTime = omp_get_wtime() - initSeqTime;
+
         switch (auroraKernels[id_previous_region].seqState)
         {
-                case INITIAL:
-                auroraKernels[id_previous_region].timeSeqTurboOn = seqTime;
+        case INITIAL:
+                auroraKernels[id_previous_region].timeSeqTurboOn = omp_get_wtime() - initSeqTime;
                 auroraKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
                 auroraKernels[id_previous_region].seqState = END_TURBO;
-
                 break;
         case END_TURBO:
-                auroraKernels[id_previous_region].timeSeqTurboOff = seqTime;
+                auroraKernels[id_previous_region].timeSeqTurboOff = omp_get_wtime() - initSeqTime;
                 auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;
                 break;
         }
 
+	//printf("Resolve Threads\n");
 	/* Find the actual parallel region */
 	for (i = 0; i < totalKernels; i++)
 	{
@@ -91,7 +89,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	/* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
 	auroraKernels[id_actual_region].idParAnt = id_previous_region;
 	auroraKernels[id_previous_region].idParPos = id_actual_region;
-
+	id_previous_region = id_actual_region;
 
 	/* Check the state of the search algorithm. */
 	switch (auroraKernels[id_actual_region].state)
@@ -266,6 +264,7 @@ void aurora_end_parallel_region(){
 	        		write(fd, set, sizeof(set));
 	        		close(fd);
 			}
+			initSeqTime = omp_get_wtime();
 			break;
 		case END_SEQUENTIAL:
 			if((auroraKernels[id_actual_region].bestFreq == TURBO_OFF && auroraKernels[id_actual_region].bestFreqSeq == TURBO_ON && (auroraKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff)) || (auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOn))){
@@ -275,12 +274,12 @@ void aurora_end_parallel_region(){
 				close(fd);
                 	}
                         break;
-                case PASS:
-                        auroraKernels[id_actual_region].seqState = INITIAL;
-                        break;
+		case PASS:
+			auroraKernels[id_actual_region].seqState = INITIAL;
+			initSeqTime = omp_get_wtime();
+			break;
 	}
-	id_previous_region = id_actual_region;
-        initSeqTime = omp_get_wtime();
+	//printf("END_PARALLEL\n");
 }
 
 /* It finalizes the environment of Aurora */
