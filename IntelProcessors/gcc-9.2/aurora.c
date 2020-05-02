@@ -75,7 +75,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         if(id_actual_region == -1){
                 idKernels[totalKernels] = ptr_region;
                 id_actual_region = totalKernels; 
-                libKernel[id_actual_region].idSeq = id_actual_region + 1;
+                libKernels[id_actual_region].idSeq = id_actual_region + 1;
                 totalKernels++;                     
         }        
          
@@ -240,7 +240,7 @@ void lib_end_parallel_region(){
 		}
 	 
         }
-        
+
         switch(libKernels[id_actual_region].seqState){
 		case END_TURBO:
 			if (libKernels[id_actual_region].bestFreq != libKernels[id_actual_region].bestFreqSeq){
