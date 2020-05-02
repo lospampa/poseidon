@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */
-void aurora_init(int aurora, int start_search)
+void aurora_init(int metric, int start_search)
 {
 	int i, fd;
 	char set[2];
@@ -21,14 +21,13 @@ void aurora_init(int aurora, int start_search)
 		auroraKernels[i].numCores = numCores;
 		auroraKernels[i].initResult = 0.0;
 		auroraKernels[i].state = REPEAT;
+                auroraKernels[i].auroraMetric = metric;
 		auroraKernels[i].bestFreq = TURBO_ON;
                 auroraKernels[i].bestFreqSeq = TURBO_ON;
 		auroraKernels[i].timeTurboOff = 0.0;
 		auroraKernels[i].timeTurboOn = 0.0;
 		auroraKernels[i].idSeq = -1;
                 auroraKernels[i].seqState = PASS;
-		//auroraKernels[i].auroraMetric = auroraMetric;
-		auroraKernels[i].auroraMetric = aurora;
 		idKernels[i] = 0;
 	}
 
@@ -50,7 +49,6 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	int i, fd;
 	char set[2];
 	id_actual_region = -1;
-	id_actual_sequential = -1;
 
 
         switch (auroraKernels[id_previous_region].seqState)

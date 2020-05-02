@@ -69,7 +69,6 @@ short int id_actual_region=0;
 short int id_previous_region=0;
 short int auroraMetric;
 short int totalKernels=0;
-short int id_actual_sequential=0;
 short int auroraTotalPackages=0;
 short int auroraTotalCores=0;
 
@@ -91,8 +90,7 @@ typedef struct{
         short int idSeq;
         short int idParAnt;
         short int idParPos;
-	int steps;
-        double bestResult, bestTime, initResult, lastResult, total_energy, total_edp, total_region_perf;
+        double bestResult, bestTime, initResult;
 	double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];

@@ -47,6 +47,7 @@
 
 #define END                     110
 #define END_THREADS             109
+#define END_TURBO               108
 #define S0                      100
 #define S1                      101
 #define S2                      102
@@ -54,6 +55,10 @@
 #define S4                      104
 #define S5                      105
 #define REPEAT                  106
+
+#define INITIAL                 107
+#define END_SEQUENTIAL          111
+#define PASS                    112
 
 
 
@@ -68,14 +73,12 @@ char packname[MAX_PACKAGES][256];
 char tempfile[256];
 int valid[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 double initGlobalTime = 0.0;
+double write_file_threshold=0.001138;
+double initSeqTime;
 unsigned long int idKernels[MAX_KERNEL];
-unsigned long int idSequentials[MAX_KERNEL+1];
 short int id_actual_region=0;
-short int id_previous_region=-1;
-short int auroraMetric;
+short int id_previous_region=0;
 short int totalKernels=0;
-short int totalSequentials=0;
-short int id_actual_sequential=0;
 
 typedef struct{
         short int numThreads;
@@ -85,6 +88,7 @@ typedef struct{
 	short int startThreads;
         short int metric;
         short int state;
+        short int seqState;
         int bestFreq;
         int bestFreqSeq;
 	short int pass;
@@ -92,7 +96,8 @@ typedef struct{
 	short int idSeq;
 	short int idParAnt;
 	short int idParPos;
-        double bestResult, bestTime, initResult, total_energy, total_edp, startSeq, endSeq;
+        double bestResult, bestTime, initResult;
+        double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
