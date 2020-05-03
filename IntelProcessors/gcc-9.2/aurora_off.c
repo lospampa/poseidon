@@ -20,8 +20,8 @@ void lib_init(int metric, int start_search){
                 libKernels[i].initResult = 0.0;
                 libKernels[i].state = REPEAT;
                 libKernels[i].metric = metric;
-		libKernels[i].bestFreq = TURBO_ON;
-                libKernels[i].bestFreqSeq = TURBO_ON;
+		libKernels[i].bestFreq = TURBO_OFF;
+                libKernels[i].bestFreqSeq = TURBO_OFF;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
                 libKernels[i].idSeq = -1;
@@ -37,7 +37,7 @@ void lib_init(int metric, int start_search){
         
         
 	/*Define the turbo core as active*/
-	sprintf(set, "%d", TURBO_ON);
+	sprintf(set, "%d", TURBO_OFF);
 	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 	write(fd, set, sizeof(set));
 	close(fd);      
@@ -53,12 +53,12 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         switch (libKernels[id_previous_region].seqState)
         {
         case INITIAL:
-                libKernels[id_previous_region].timeSeqTurboOn = omp_get_wtime() - initSeqTime;
-                libKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
+                libKernels[id_previous_region].timeSeqTurboOff = omp_get_wtime() - initSeqTime;
+                libKernels[id_previous_region].bestFreqSeq = TURBO_ON;
                 libKernels[id_previous_region].seqState = END_TURBO;
                 break;
         case END_TURBO:
-                libKernels[id_previous_region].timeSeqTurboOff = omp_get_wtime() - initSeqTime;
+                libKernels[id_previous_region].timeSeqTurboOn = omp_get_wtime() - initSeqTime;
                 libKernels[id_previous_region].seqState = END_SEQUENTIAL;
                 break;
         }
@@ -185,16 +185,16 @@ void lib_end_parallel_region(){
 							libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
 							libKernels[id_actual_region].state = S2;
 						}else{
-							libKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
-                                                        libKernels[id_actual_region].timeTurboOn = time;
+							libKernels[id_actual_region].bestFreq = TURBO_ON; //testar com turbo on;
+                                                        libKernels[id_actual_region].timeTurboOff = time;
 							libKernels[id_actual_region].state = END_THREADS;
 						}
 
 					}
 				}else{
 					if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
-							libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                        libKernels[id_actual_region].timeTurboOn = time;
+							libKernels[id_actual_region].bestFreq = TURBO_ON;
+                                                        libKernels[id_actual_region].timeTurboOff = time;
 							libKernels[id_actual_region].state = END_THREADS;
 					}else{
 						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
@@ -202,8 +202,8 @@ void lib_end_parallel_region(){
 							libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
 							libKernels[id_actual_region].state = S2;
 						}else{
-							libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                        libKernels[id_actual_region].timeTurboOn = time;
+							libKernels[id_actual_region].bestFreq = TURBO_ON;
+                                                        libKernels[id_actual_region].timeTurboOff = time;
 							libKernels[id_actual_region].state = END_THREADS;
 						}
 					}
@@ -217,8 +217,8 @@ void lib_end_parallel_region(){
 						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
 					}
 					else{
-						libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                libKernels[id_actual_region].timeTurboOn = time;
+						libKernels[id_actual_region].bestFreq = TURBO_ON;
+                                                libKernels[id_actual_region].timeTurboOff = time;
 						libKernels[id_actual_region].state = END_THREADS;
 					}
 				}else{
@@ -229,8 +229,8 @@ void lib_end_parallel_region(){
 					if(libKernels[id_actual_region].pass >= 2){
 						libKernels[id_actual_region].numThreads += libKernels[id_actual_region].pass;
 					}else{
-						libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                libKernels[id_actual_region].timeTurboOn = time;
+						libKernels[id_actual_region].bestFreq = TURBO_ON;
+                                                libKernels[id_actual_region].timeTurboOff = time;
 						libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
@@ -238,9 +238,9 @@ void lib_end_parallel_region(){
 			case END_THREADS:
 				//printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
 				libKernels[id_actual_region].state = END;
-                                libKernels[id_actual_region].timeSeqTurboOff = time;
+                                libKernels[id_actual_region].timeSeqTurboOn = time;
 				if(result < libKernels[id_actual_region].bestResult)
-					libKernels[id_actual_region].bestFreq = TURBO_OFF;
+					libKernels[id_actual_region].bestFreq = TURBO_ON;
 
                        		break;
 		}
