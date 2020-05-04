@@ -21,11 +21,9 @@ void lib_init(int metric, int start_search){
                 libKernels[i].state = REPEAT;
                 libKernels[i].metric = metric;
 		libKernels[i].bestFreq = TURBO_ON;
-                libKernels[i].bestFreqSeq = TURBO_ON;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
                 libKernels[i].idSeq = -1;
-                libKernels[i].seqState = PASS;
                 idKernels[i] = 0;
                 
         }
@@ -46,22 +44,10 @@ void lib_init(int metric, int start_search){
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
 int lib_resolve_num_threads(uintptr_t ptr_region){
-        int i, fd;
+        double time=0, energy=0, result=0;
+	int i, fd;
 	char set[2];
         id_actual_region = -1;
-        
-        switch (libKernels[id_previous_region].seqState)
-        {
-        case INITIAL:
-                libKernels[id_previous_region].timeSeqTurboOn = omp_get_wtime() - initSeqTime;
-                libKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
-                libKernels[id_previous_region].seqState = END_TURBO;
-                break;
-        case END_TURBO:
-                libKernels[id_previous_region].timeSeqTurboOff = omp_get_wtime() - initSeqTime;
-                libKernels[id_previous_region].seqState = END_SEQUENTIAL;
-                break;
-        }
 
         /* Find the actual parallel region */
         for(i=0;i<totalKernels;i++){
@@ -84,66 +70,16 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	libKernels[id_previous_region].idParPos = id_actual_region;
 	id_previous_region = id_actual_region;
 
-
-        /* Check the state of the search algorithm. */
-        switch(libKernels[id_actual_region].state){
-	        case END:
-			if((libKernels[id_previous_region].bestFreqSeq == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (libKernels[id_previous_region].bestFreqSeq == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
-                        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-			sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-			write(fd, set, sizeof(set));
-			close(fd);
-                        }
-               		return libKernels[id_actual_region].bestThreadOn;
-			break;
-		case END_THREADS:
-			if(libKernels[id_actual_region].bestTime > 0.1){
-				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-				write(fd, set, sizeof(set));
-				close(fd);
-			}
-               		return libKernels[id_actual_region].bestThreadOn;
-			break;
-                default:
-                        lib_start_rapl_sysfs();
-                        libKernels[id_actual_region].initResult = omp_get_wtime();
-			if(libKernels[id_actual_region].bestTime > 0.1){
-				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-				write(fd, set, sizeof(set));
-				close(fd);
-			}
-                        return libKernels[id_actual_region].numThreads; 
-        }      
-}
-
-
-/* It is responsible for performing the search algorithm */
-void lib_end_parallel_region(){
-        double time=0, energy=0, result=0;
-	int fd;
-	char set[2];
-        if(libKernels[id_actual_region].state !=END){
+        if(libKernels[id_actual_region].state != END && libKernels[id_actual_region].state != REPEAT){
                 /* Check the metric that is being evaluated and collect the results */
                 switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
-				//printf("case Performance\n");
+                                //printf("Performance\n");
                                 result = omp_get_wtime() - libKernels[id_actual_region].initResult;
 				time = result;
                                 break;
-                        case ENERGY:
-				//printf("case Eenrgy\n");
-				time = omp_get_wtime() - libKernels[id_actual_region].initResult;
-                                result = lib_end_rapl_sysfs();
-                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
-                                if(result == 0.000000 || result < 0){
-                                        libKernels[id_actual_region].state = REPEAT;
-                                        libKernels[id_actual_region].metric = PERFORMANCE;
-                                }
-                                break;
                         case EDP:
-				//printf("case EDP\n");
+                                //printf("EDP\n");
                                 time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                                 energy = lib_end_rapl_sysfs();
                                 result = time * energy;
@@ -154,13 +90,14 @@ void lib_end_parallel_region(){
                                 }
                                 break;
                 }
+        }       
                 switch(libKernels[id_actual_region].state){
 			case REPEAT:
 				//printf("REPEAT = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				libKernels[id_actual_region].state = S0;
 				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
 				libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
-				break;
+                                break;
 			case S0:
 				//printf("S0 = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				libKernels[id_actual_region].bestResult = result;
@@ -171,6 +108,7 @@ void lib_end_parallel_region(){
 				break;
 			case S1:
 				//printf("S1 = %d %f\n", libKernels[id_actual_region].numThreads, result);
+                                //printf("S1_BEST_RESULT = %f\n", libKernels[id_actual_region].bestTime);
 				if(result < libKernels[id_actual_region].bestResult){
 					libKernels[id_actual_region].bestResult = result;
 					libKernels[id_actual_region].bestTime = time;
@@ -182,8 +120,8 @@ void lib_end_parallel_region(){
 					else{
 						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
 						if(libKernels[id_actual_region].pass >= 2){
-							libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
-							libKernels[id_actual_region].state = S2;
+						        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
+						        libKernels[id_actual_region].state = S2;
 						}else{
 							libKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
                                                         libKernels[id_actual_region].timeTurboOn = time;
@@ -193,9 +131,10 @@ void lib_end_parallel_region(){
 					}
 				}else{
 					if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
-							libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                        libKernels[id_actual_region].timeTurboOn = time;
-							libKernels[id_actual_region].state = END_THREADS;
+						libKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                                libKernels[id_actual_region].timeTurboOn = time;
+						libKernels[id_actual_region].state = END_THREADS;
+                                  
 					}else{
 						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
 						if(libKernels[id_actual_region].pass >= 2){
@@ -211,6 +150,7 @@ void lib_end_parallel_region(){
 				break;
 			case S2:
 				//printf("S2 = %d %f\n", libKernels[id_actual_region].numThreads, result);
+                                //printf("S2_BEST_RESULT = %f\n", libKernels[id_actual_region].bestTime);
 				if(libKernels[id_actual_region].bestResult < result){
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
 					if(libKernels[id_actual_region].pass >= 2){
@@ -234,46 +174,49 @@ void lib_end_parallel_region(){
 						libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
-				break;
-			case END_THREADS:
-				//printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
-				libKernels[id_actual_region].state = END;
-                                libKernels[id_actual_region].timeTurboOff = time;
-				//if(result < libKernels[id_actual_region].bestResult)
-				//	libKernels[id_actual_region].bestFreq = TURBO_OFF;
-				if(libKernels[id_actual_region].bestResult < result)
-					libKernels[id_actual_region].bestFreq = TURBO_ON;
+			        break;
+                }
 
-                       		break;
-		}
-	 
-        }
+               if(libKernels[id_actual_region].state != END_THREADS && libKernels[id_actual_region].state != END && libKernels[id_previous_region].bestFreq != libKernels[id_actual_region].bestFreq && libKernels[id_actual_region].bestTime > 0.1){
+                        //printf("S2[1]: Desliga\n");
+			fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+			sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+			write(fd, set, sizeof(set));
+			close(fd);
+                }
 
-        switch(libKernels[id_actual_region].seqState){
-		case END_TURBO:
-			if (libKernels[id_actual_region].bestFreq != libKernels[id_actual_region].bestFreqSeq){
-                		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-        			sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
-	        		write(fd, set, sizeof(set));
-	        		close(fd);
-			}
-			initSeqTime = omp_get_wtime();
-			break;
-		case END_SEQUENTIAL:
-			if((libKernels[id_actual_region].bestFreq == TURBO_OFF && libKernels[id_actual_region].bestFreqSeq == TURBO_ON && (libKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOff)) || (libKernels[id_previous_region].bestFreqSeq == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn))){
-                        	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-				sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
-				write(fd, set, sizeof(set));
-				close(fd);
-                	}
+                switch (libKernels[id_actual_region].state)
+                {
+                case END_THREADS:
+                        //printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
+                        //printf("END_THREADS_BEST_RESULT = %f\n", libKernels[id_actual_region].bestTime);
+			libKernels[id_actual_region].state = END;
+                        libKernels[id_actual_region].timeTurboOff = time;
+			if(libKernels[id_actual_region].bestResult < result){
+				libKernels[id_actual_region].bestFreq = TURBO_ON;
+                        }
+                        return libKernels[id_actual_region].bestThreadOn;
+                       	break;
+                case END:
+                        //printf("Case END\n");
+                        //printf("END_BEST_RESULT = %f\n", libKernels[id_actual_region].bestTime);
+                        if((libKernels[id_previous_region].bestFreq == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (libKernels[id_previous_region].bestFreq == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
+                                fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+			        sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+			        write(fd, set, sizeof(set));
+			        close(fd);
+                        }
+                        return libKernels[id_actual_region].bestThreadOn;
                         break;
-		case PASS:
-			libKernels[id_actual_region].seqState = INITIAL;
-			initSeqTime = omp_get_wtime();
-			break;
-	}
+                
+                default:
+                        lib_start_rapl_sysfs();
+                        libKernels[id_actual_region].initResult = omp_get_wtime();
+                        return libKernels[id_actual_region].numThreads;
+                        break;
+                }
+        
 }
-
 
 /* It finalizes the environment of Aurora */
 void lib_destructor(){
