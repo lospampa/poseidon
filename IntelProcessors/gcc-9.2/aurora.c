@@ -239,8 +239,10 @@ void lib_end_parallel_region(){
 				//printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
 				libKernels[id_actual_region].state = END;
                                 libKernels[id_actual_region].timeTurboOff = time;
-				if(result < libKernels[id_actual_region].bestResult)
-					libKernels[id_actual_region].bestFreq = TURBO_OFF;
+				//if(result < libKernels[id_actual_region].bestResult)
+				//	libKernels[id_actual_region].bestFreq = TURBO_OFF;
+				if(libKernels[id_actual_region].bestResult < result)
+					libKernels[id_actual_region].bestFreq = TURBO_ON;
 
                        		break;
 		}
