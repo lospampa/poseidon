@@ -106,35 +106,29 @@ int goacc_default_dims[GOMP_DIM_MAX];
 static bool parse_aurora(const char *name, int *pvalue, bool allow_zero){
         char *env = getenv(name);
         if(env == NULL){
-                printf("Poseidon: Disabled\n");
+                printf("POSEIDON: Disabled\n");
                 aurora_init(3,0);
                 *pvalue = -1;
                 return false;
         }
         if( (strcmp("performance",env) == 0) || (strcmp("PERFORMANCE",env) == 0)){
-                printf("Poseidon - OpenMP Application Optimized for Performance\n");
+                printf("POSEIDON - OpenMP Application Optimized for Performance\n");
                 *pvalue = 0;
         }
-        else if( (strcmp("energy",env) == 0) || (strcmp("ENERGY",env) == 0)){
+        /*else if( (strcmp("energy",env) == 0) || (strcmp("ENERGY",env) == 0)){
                 printf("Poseidon - OpenMP Application Optimized for energy\n");
                 *pvalue = 1;
-        }
+        }*/
         else if( (strcmp("edp",env) == 0) || (strcmp("EDP",env) == 0)){
-                printf("Poseidon - OpenMP Application Optimized for EDP\n");
+                printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
-        }else if( (strcmp("power",env) == 0) || (strcmp("POWER",env) == 0)){
-                printf("Poseidon - OpenMP Application Optimized for Power\n");
-                *pvalue = 3;
-}else if( (strcmp("temperature",env) == 0) || (strcmp("TEMPERATURE",env) == 0)){
-                printf("Poseidon - OpenMP Application Optimized for Temperature\n");
-                *pvalue = 4;
         }else{
-                printf("Poseidon - Optimization not recognized!\n");
+                printf("POSEIDON - Optimization not recognized!\n");
                 printf(" -- OpenMP Application Optimized for Performance by default\n");
                 *pvalue = 0;
                 printf("\n\t\tPlease:\n");
                 printf("\t\tTo optimize performance: export OMP_AURORA=PERFORMANCE or export OMP_AURORA=performance\n");
-                printf("\t\tTo optimize energy: export OMP_AURORA=ENERGY or export OMP_AURORA=energy\n");
+                //printf("\t\tTo optimize energy: export OMP_AURORA=ENERGY or export OMP_AURORA=energy\n");
                 printf("\t\tTo optimize edp: export OMP_AURORA=EDP or export OMP_AURORA=edp\n");
         }
 

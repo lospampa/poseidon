@@ -177,7 +177,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			        break;
                 }
 
-               if(libKernels[id_actual_region].state != END_THREADS && libKernels[id_actual_region].state != END && libKernels[id_previous_region].bestFreq != libKernels[id_actual_region].bestFreq && libKernels[id_actual_region].bestTime > 0.1){
+               if(libKernels[id_actual_region].state != END_THREADS && libKernels[id_actual_region].state != END && libKernels[id_previous_region].bestFreq != libKernels[id_actual_region].bestFreq && libKernels[id_actual_region].bestTime > write_file_threshold){
                         //printf("S2[1]: Desliga\n");
 			fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			sprintf(set, "%d", libKernels[id_actual_region].bestFreq);

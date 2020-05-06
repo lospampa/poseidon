@@ -37,10 +37,7 @@
 #define MAX_KERNEL              61 // Matheus: O que é isso?
 #define MAX_THREADS             32
 #define PERFORMANCE             0
-#define ENERGY                  1
 #define EDP                     2
-#define POWER                   3
-#define TEMPERATURE             4
 #define TURBO_ON                1
 #define TURBO_OFF               0
 

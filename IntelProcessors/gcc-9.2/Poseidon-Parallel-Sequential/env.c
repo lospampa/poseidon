@@ -222,10 +222,6 @@ static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
                 printf("POSEIDON - OpenMP Application Optimized for Performance\n");
                 *pvalue = 0;
         }
-        else if( (strcmp("energy",env) == 0) || (strcmp("ENERGY",env) == 0)){
-                printf("POSEIDON - OpenMP Application Optimized for energy\n");
-                *pvalue = 1;
-        }
         else if( (strcmp("edp",env) == 0) || (strcmp("EDP",env) == 0)){
                 printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
@@ -235,7 +231,6 @@ static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
                 *pvalue = 0;
                 printf("\n\t\tPlease:\n");
                 printf("\t\tTo optimize performance: export OMP_POSEIDON=PERFORMANCE or export OMP_POSEIDON=performance\n");
-                printf("\t\tTo optimize energy: export OMP_POSEIDON=ENERGY or export OMP_POSEIDON=energy\n");
                 printf("\t\tTo optimize edp: export OMP_POSEIDON=EDP or export OMP_POSEIDON=edp\n");
         }
 		

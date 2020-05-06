@@ -100,7 +100,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                		return libKernels[id_actual_region].bestThreadOn;
 			break;
 		case END_THREADS:
-			if(libKernels[id_actual_region].bestTime > 0.1){
+			if(libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
 				write(fd, set, sizeof(set));
@@ -111,7 +111,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                 default:
                         lib_start_rapl_sysfs();
                         libKernels[id_actual_region].initResult = omp_get_wtime();
-			if(libKernels[id_actual_region].bestTime > 0.1){
+			if(libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
 				write(fd, set, sizeof(set));
@@ -134,16 +134,6 @@ void lib_end_parallel_region(){
 				//printf("case Performance\n");
                                 result = omp_get_wtime() - libKernels[id_actual_region].initResult;
 				time = result;
-                                break;
-                        case ENERGY:
-				//printf("case Eenrgy\n");
-				time = omp_get_wtime() - libKernels[id_actual_region].initResult;
-                                result = lib_end_rapl_sysfs();
-                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
-                                if(result == 0.000000 || result < 0){
-                                        libKernels[id_actual_region].state = REPEAT;
-                                        libKernels[id_actual_region].metric = PERFORMANCE;
-                                }
                                 break;
                         case EDP:
 				//printf("case EDP\n");
