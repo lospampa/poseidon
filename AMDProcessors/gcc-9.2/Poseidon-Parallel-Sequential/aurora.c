@@ -90,7 +90,6 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	/* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
 	auroraKernels[id_actual_region].idParAnt = id_previous_region;
 	auroraKernels[id_previous_region].idParPos = id_actual_region;
-	id_previous_region = id_actual_region;
 
 	/* Check the state of the search algorithm. */
 	switch (auroraKernels[id_actual_region].state)
@@ -270,6 +269,7 @@ void aurora_end_parallel_region(){
 			initSeqTime = omp_get_wtime();
 			break;
 	}
+	id_previous_region = id_actual_region;
 	//printf("END_PARALLEL\n");
 }
 
