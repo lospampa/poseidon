@@ -30,13 +30,9 @@
 #define MAX_KERNEL              61
 #define MAX_THREADS             32
 #define PERFORMANCE             0
-#define ENERGY                  1
 #define EDP                     2
-#define POWER		        3
-#define TEMPERATURE             4
 #define TURBO_ON		1
 #define TURBO_OFF		0
-
 
 
 #define END                     10
@@ -46,13 +42,8 @@
 #define S1                      1
 #define S2                      2
 #define S3                      3
-#define REPEAT                  4
-
-
-
-#define INITIAL                 7
-#define END_SEQUENTIAL          5    
-#define PASS                    12
+#define REPEAT                  4  
+#define PASS                    7
 
 
 
@@ -66,7 +57,6 @@ double initGlobalTime = 0.0;
 // write_file_threshold for Krakoa: XXXXX
 // write_file_threshold for MatheusPC: 0.001138
 double write_file_threshold=0.001138;
-double initSeqTime;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int id_previous_region=0;
@@ -85,16 +75,14 @@ typedef struct{
         short int startThreads;
         short int auroraMetric;
         short int state;
-        short int seqState;
         int bestFreq;
-        int bestFreqSeq;
         short int pass;
         short int lastThread;
         short int idSeq;
         short int idParAnt;
         short int idParPos;
         double bestResult, bestTime, initResult;
-	double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff;
+	double timeTurboOff, timeTurboOn;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];
 }typeFrame;

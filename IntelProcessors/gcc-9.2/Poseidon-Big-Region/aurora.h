@@ -51,6 +51,7 @@
 #define S4                      104
 #define S5                      105
 #define REPEAT                  106
+#define PASS                    107
 
 
 
@@ -65,8 +66,10 @@ char packname[MAX_PACKAGES][256];
 char tempfile[256];
 int valid[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 double initGlobalTime = 0.0;
+// write_file_threshold for Joker-1: XXXXX
+// write_file_threshold for Krakoa: XXXXX
+// write_file_threshold for MatheusPC: 0.001138
 double write_file_threshold=0.001138;
-double initSeqTime;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int id_previous_region=0;

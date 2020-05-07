@@ -88,122 +88,121 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                 break;
                 }
         }       
-                switch(libKernels[id_actual_region].state){
-			case REPEAT:
-				libKernels[id_actual_region].state = S0;
-				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
-				libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
-                                break;
-			case S0:
+        switch(libKernels[id_actual_region].state){
+		case REPEAT:
+		        libKernels[id_actual_region].state = S0;
+		        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
+			libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
+                        break;
+		case S0:
+			libKernels[id_actual_region].bestResult = result;
+			libKernels[id_actual_region].bestTime = time;
+			libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
+			libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
+			libKernels[id_actual_region].state = S1;
+			break;
+		case S1:
+			if(result < libKernels[id_actual_region].bestResult){
 				libKernels[id_actual_region].bestResult = result;
 				libKernels[id_actual_region].bestTime = time;
 				libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
-				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
-				libKernels[id_actual_region].state = S1;
-				break;
-			case S1:
-				if(result < libKernels[id_actual_region].bestResult){
-					libKernels[id_actual_region].bestResult = result;
-					libKernels[id_actual_region].bestTime = time;
-					libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
-					if(libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores){
-						libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
-						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
-					}
-					else{
-						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
-						if(libKernels[id_actual_region].pass >= 2){
-						        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
-						        libKernels[id_actual_region].state = S2;
-						}else{
-							libKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
-                                                        libKernels[id_actual_region].timeTurboOn = time;
-							libKernels[id_actual_region].state = END_THREADS;
-						}
-
-					}
-				}else{
-					if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
-						libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                libKernels[id_actual_region].timeTurboOn = time;
-						libKernels[id_actual_region].state = END_THREADS;
-                                  
+				if(libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores){
+					libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
+					libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
+				}
+				else{
+					libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
+					if(libKernels[id_actual_region].pass >= 2){
+					        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
+					        libKernels[id_actual_region].state = S2;
 					}else{
-						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
-						if(libKernels[id_actual_region].pass >= 2){
-							libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-							libKernels[id_actual_region].state = S2;
-						}else{
-							libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                        libKernels[id_actual_region].timeTurboOn = time;
-							libKernels[id_actual_region].state = END_THREADS;
-						}
+						libKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
+                                                libKernels[id_actual_region].timeTurboOn = time;
+		        			libKernels[id_actual_region].state = PASS;
 					}
 				}
-				break;
-			case S2:
-				if(libKernels[id_actual_region].bestResult < result){
-					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
+			}else{
+				if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
+        				libKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                        libKernels[id_actual_region].timeTurboOn = time;
+					libKernels[id_actual_region].state = PASS;
+                                  
+				}else{
+					libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
 					if(libKernels[id_actual_region].pass >= 2){
 						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-					}
-					else{
-						libKernels[id_actual_region].bestFreq = TURBO_OFF;
-                                                libKernels[id_actual_region].timeTurboOn = time;
-						libKernels[id_actual_region].state = END_THREADS;
-					}
-				}else{
-					libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
-					libKernels[id_actual_region].bestTime = time;
-					libKernels[id_actual_region].bestResult = result;
-					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
-					if(libKernels[id_actual_region].pass >= 2){
-						libKernels[id_actual_region].numThreads += libKernels[id_actual_region].pass;
+						libKernels[id_actual_region].state = S2;
 					}else{
 						libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                                 libKernels[id_actual_region].timeTurboOn = time;
-						libKernels[id_actual_region].state = END_THREADS;
+						libKernels[id_actual_region].state = PASS;
 					}
 				}
-			        break;
-                }
+			}
+			break;
+		case S2:
+			if(libKernels[id_actual_region].bestResult < result){
+				libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
+				if(libKernels[id_actual_region].pass >= 2){
+					libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
+				}
+				else{
+					libKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                        libKernels[id_actual_region].timeTurboOn = time;
+					libKernels[id_actual_region].state = PASS;
+				}
+			}else{
+				libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
+				libKernels[id_actual_region].bestTime = time;
+				libKernels[id_actual_region].bestResult = result;
+				libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
+				if(libKernels[id_actual_region].pass >= 2){
+					libKernels[id_actual_region].numThreads += libKernels[id_actual_region].pass;
+				}else{
+					libKernels[id_actual_region].bestFreq = TURBO_OFF;
+                                        libKernels[id_actual_region].timeTurboOn = time;
+					libKernels[id_actual_region].state = PASS;
+				}
+			}
+		        break;
+                case PASS:
+                        libKernels[id_actual_region].state = END_THREADS;
+        }
 
-               if( libKernels[id_actual_region].state != END && libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq && libKernels[id_actual_region].bestResult > write_file_threshold){
-			fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-			sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-			write(fd, set, sizeof(set));
-			close(fd);
-                }
+        if(libKernels[id_actual_region].state != END && libKernels[id_actual_region].state != END_THREADS && libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq && libKernels[id_actual_region].bestResult > write_file_threshold){
+	        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+		sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+		write(fd, set, sizeof(set));
+		close(fd);
+        }
 
-                switch (libKernels[id_actual_region].state)
-                {
+        switch (libKernels[id_actual_region].state){
                 case END_THREADS:
-			libKernels[id_actual_region].state = END;
+		        libKernels[id_actual_region].state = END;
                         libKernels[id_actual_region].timeTurboOff = time;
                         if(libKernels[id_actual_region].bestResult < result){
-				libKernels[id_actual_region].bestFreq = TURBO_ON;
-                        }
-                        id_previous_region = id_actual_region;    
-                        return libKernels[id_actual_region].bestThreadOn;
-                       	break;
-                case END:
-                        if((libKernels[id_previous_region].bestFreq == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (libKernels[id_previous_region].bestFreq == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
-                                fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-			        sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-			        write(fd, set, sizeof(set));
-			        close(fd);
+			        libKernels[id_actual_region].bestFreq = TURBO_ON;
                         }
                         id_previous_region = id_actual_region;    
                         return libKernels[id_actual_region].bestThreadOn;
                         break;
-                
+                case END:
+                        if((libKernels[id_previous_region].bestFreq == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (libKernels[id_previous_region].bestFreq == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
+                                fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+	                        sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+	                        write(fd, set, sizeof(set));
+	                        close(fd);
+                        }
+                        id_previous_region = id_actual_region;    
+                        return libKernels[id_actual_region].bestThreadOn;
+                        break;
                 default:
                         lib_start_rapl_sysfs();
                         libKernels[id_actual_region].initResult = omp_get_wtime();
                         id_previous_region = id_actual_region;    
                         return libKernels[id_actual_region].numThreads;
                         break;
-                }
+        }
 }
 
 /* It finalizes the environment of Aurora */
@@ -218,7 +217,7 @@ void lib_destructor(){
 }
 
 /* Function used by the Intel RAPL to detect the CPU Architecture*/
-void lib_detect_cpu(){                                printf("OPA!!!!\n");
+void lib_detect_cpu(){                               
         FILE *fff;
         int family,model=-1;
         char buffer[BUFSIZ],*result;

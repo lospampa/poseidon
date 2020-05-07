@@ -130,12 +130,10 @@ void lib_end_parallel_region(){
                 /* Check the metric that is being evaluated and collect the results */
                 switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
-				//printf("case Performance\n");
                                 result = omp_get_wtime() - libKernels[id_actual_region].initResult;
 				time = result;
                                 break;
                         case EDP:
-				//printf("case EDP\n");
                                 time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                                 energy = lib_end_rapl_sysfs();
                                 result = time * energy;
@@ -148,13 +146,11 @@ void lib_end_parallel_region(){
                 }
                 switch(libKernels[id_actual_region].state){
 			case REPEAT:
-				//printf("REPEAT = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				libKernels[id_actual_region].state = S0;
 				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
 				libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
 				break;
 			case S0:
-				//printf("S0 = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				libKernels[id_actual_region].bestResult = result;
 				libKernels[id_actual_region].bestTime = time;
 				libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
@@ -162,7 +158,6 @@ void lib_end_parallel_region(){
 				libKernels[id_actual_region].state = S1;
 				break;
 			case S1:
-				//printf("S1 = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				if(result < libKernels[id_actual_region].bestResult){
 					libKernels[id_actual_region].bestResult = result;
 					libKernels[id_actual_region].bestTime = time;
@@ -202,7 +197,6 @@ void lib_end_parallel_region(){
 				}
 				break;
 			case S2:
-				//printf("S2 = %d %f\n", libKernels[id_actual_region].numThreads, result);
 				if(libKernels[id_actual_region].bestResult < result){
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
 					if(libKernels[id_actual_region].pass >= 2){
@@ -228,7 +222,6 @@ void lib_end_parallel_region(){
 				}
 				break;
 			case END_THREADS:
-				//printf("END_THREADS = %d %f\n", libKernels[id_actual_region].bestThreadOn, result);
 				libKernels[id_actual_region].state = END;
                                 libKernels[id_actual_region].timeTurboOff = time;
 				if(libKernels[id_actual_region].bestResult < result)
