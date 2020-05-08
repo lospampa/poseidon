@@ -62,7 +62,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
                 auroraKernels[id_previous_region].timeSeqTurboOff = omp_get_wtime() - initSeqTime;
                 auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;
                 if(auroraKernels[id_previous_region].timeSeqTurboOff > auroraKernels[id_previous_region].timeSeqTurboOn){
-                        auroraKernels[id_previous_region].bestFreqSeq = TURBO_ON
+                        auroraKernels[id_previous_region].bestFreqSeq = TURBO_ON;
                 }
                 break;
         }
