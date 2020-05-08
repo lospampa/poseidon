@@ -42,7 +42,7 @@ void aurora_init(int metric, int start_search)
 }
 
 /* It defines the number of threads that will execute the actual region based on the current state of the search algorithm */
-void aurora_resolve_num_threads(uintptr_t ptr_region){
+int aurora_resolve_num_threads(uintptr_t ptr_region){
         double time=0, energy=0, result=0; 
         int i, fd;
 	char set[2];
@@ -175,7 +175,7 @@ void aurora_resolve_num_threads(uintptr_t ptr_region){
 		write(fd, set, sizeof(set));
 		close(fd);
         }
-        switch (libKernels[id_actual_region].state){
+        switch (auroraKernels[id_actual_region].state){
                 case END_THREADS:
 			auroraKernels[id_actual_region].state = END;
 			auroraKernels[id_actual_region].timeTurboOff = time;
@@ -186,7 +186,7 @@ void aurora_resolve_num_threads(uintptr_t ptr_region){
                         return auroraKernels[id_actual_region].bestThreadOn;
                         break;
                 case END:
-                        if((auroraKernels[id_previous_region].bestFreqSeq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq == TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)) || (auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn))){
+                        if((auroraKernels[id_previous_region].bestFreq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq == TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)) || (auroraKernels[id_previous_region].bestFreq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn))){
                                 fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
                                 sprintf(set, "%d", auroraKernels[id_actual_region].bestFreq);
 			        write(fd, set, sizeof(set));
@@ -199,7 +199,7 @@ void aurora_resolve_num_threads(uintptr_t ptr_region){
                         aurora_start_amd_msr();
 		        auroraKernels[id_actual_region].initResult = omp_get_wtime();
                         id_previous_region = id_actual_region;
-                        return libKernels[id_actual_region].numThreads;
+                        return auroraKernels[id_actual_region].numThreads;
                         break;
         }
         
