@@ -62,10 +62,7 @@ static int package_map[MAX_PACKAGES];
 char packname[MAX_PACKAGES][256];
 char tempfile[256];
 double initGlobalTime = 0.0;
-// write_file_threshold for Joker-1: 0.000156
-// write_file_threshold for Krakoa: XXXXX
-// write_file_threshold for MatheusPC: 0.001138
-double write_file_threshold=0.000156;
+double write_file_threshold=0.0;
 double initSeqTime;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;

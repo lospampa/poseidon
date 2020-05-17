@@ -6,6 +6,10 @@
 void aurora_init(int metric, int start_search)
 {
 	int i, fd;
+        double initTimeFile, endTimeFile; 
+        double result = 0;
+        double max = 0.0;
+        double min = 1.0;
 	char set[2];
 	int numCores = sysconf(_SC_NPROCESSORS_ONLN);
 	/*Initialization of RAPL */
@@ -36,11 +40,24 @@ void aurora_init(int metric, int start_search)
 	aurora_start_amd_msr();
 	initGlobalTime = omp_get_wtime();
 
-	/*Define the turbo core as active*/
-	sprintf(set, "%d", TURBO_ON);
-	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-	write(fd, set, sizeof(set));
-	close(fd);
+	/* Find the cost of writing the turbo file. Also activates Turbo Core in the first iteration */
+	for(i=0;i<10;i++){
+		initTimeFile = omp_get_wtime();
+		sprintf(set, "%d", TURBO_OFF);
+		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+		write(fd, set, sizeof(set));
+		close(fd);      	
+	
+		sprintf(set, "%d", TURBO_ON);
+		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+		write(fd, set, sizeof(set));
+		close(fd);    
+                endTimeFile = omp_get_wtime() - initTimeFile;
+                min = (endTimeFile < min) ? endTimeFile : min;
+                max = (endTimeFile > max) ? endTimeFile : max;
+                result += endTimeFile;
+	}
+        write_file_threshold = (result - (min+max))/8;
 }
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
