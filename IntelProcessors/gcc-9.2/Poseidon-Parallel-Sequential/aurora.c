@@ -52,9 +52,9 @@ void lib_init(int metric, int start_search){
 		write(fd, set, sizeof(set));
 		close(fd);    
                 endTimeFile = omp_get_wtime() - initTimeFile;
-                min = (endTimeFile < min) ? endTimeFile : min;
-                max = (endTimeFile > max) ? endTimeFile : max;
-                result += endTimeFile;
+                min = (endTimeFile <= min) ? endTimeFile : min;
+                max = (endTimeFile >= max) ? endTimeFile : max;           
+		result += endTimeFile;
 	}
         write_file_threshold = (result - (min+max))/8;
 }
