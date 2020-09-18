@@ -38,7 +38,7 @@ void lib_init(int metric, int start_search){
         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         write(fd, set, sizeof(set));
         close(fd);    
-        write_file_threshold = 0.000136
+        write_file_threshold = 0.000136;
 }
 
 
@@ -70,7 +70,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         libKernels[id_actual_region].idParAnt = id_previous_region;
 	libKernels[id_previous_region].idParPos = id_actual_region;
 
-        if(libKernels[id_actual_region].state != END && libKernels[id_actual_region].state != REPEAT){
+        if(libKernels[id_actual_region].state != END){
                 /* Check the metric that is being evaluated and collect the results */
                 switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
@@ -87,8 +87,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                         libKernels[id_actual_region].metric = PERFORMANCE;
                                 }
                                 break;
-                }
-        }       
+                }      
         switch(libKernels[id_actual_region].state){
 		case REPEAT:
 		        libKernels[id_actual_region].state = S0;
