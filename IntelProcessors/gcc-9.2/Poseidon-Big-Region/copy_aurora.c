@@ -198,7 +198,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			close(fd);
                 }
 		id_previous_region = id_actual_region;
-		return return auroraKernels[id_actual_region].bestThreadOn;
+		return libKernels[id_actual_region].bestThreadOn;
 	}
 
         
