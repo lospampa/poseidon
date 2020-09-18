@@ -92,7 +92,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		case REPEAT:
 		        libKernels[id_actual_region].state = S0;
 		        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
-			var_threads=libKernels[id_actual_region].numThreads;
+			var_thread=libKernels[id_actual_region].numThreads;
 			libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
                         break;
 		case S0:
