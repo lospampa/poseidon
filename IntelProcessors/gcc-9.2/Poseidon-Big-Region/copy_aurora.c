@@ -122,14 +122,14 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 					}else{
 						libKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
                                                 libKernels[id_actual_region].timeTurboOn = time;
-		        			libKernels[id_actual_region].state = PASS;
+		        			libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
 			}else{
 				if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
         				libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                         libKernels[id_actual_region].timeTurboOn = time;
-					libKernels[id_actual_region].state = PASS;
+					libKernels[id_actual_region].state = END_THREADS;
                                   
 				}else{
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
@@ -140,7 +140,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 					}else{
 						libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                                 libKernels[id_actual_region].timeTurboOn = time;
-						libKernels[id_actual_region].state = PASS;
+						libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
 			}
@@ -155,7 +155,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				else{
 					libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                         libKernels[id_actual_region].timeTurboOn = time;
-					libKernels[id_actual_region].state = PASS;
+					libKernels[id_actual_region].state = END_THREADS;
 				}
 			}else{
 				libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
@@ -168,7 +168,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				}else{
 					libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                         libKernels[id_actual_region].timeTurboOn = time;
-					libKernels[id_actual_region].state = PASS;
+					libKernels[id_actual_region].state = END_THREADS;
 				}
 			}
 		        break;
