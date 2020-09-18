@@ -72,7 +72,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 
         if(libKernels[id_actual_region].state != END){
                 /* Check the metric that is being evaluated and collect the results */
-		if (libKernels[id_actual_region].state != REPEAT){
                 switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
                                 result = omp_get_wtime() - libKernels[id_actual_region].initResult;
@@ -88,7 +87,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                         libKernels[id_actual_region].metric = PERFORMANCE;
                                 }
                                 break;
-                }     } 
+                }      
         switch(libKernels[id_actual_region].state){
 		case REPEAT:
 		        libKernels[id_actual_region].state = S0;
