@@ -5,13 +5,8 @@
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void aurora_init(int metric, int start_search)
 {
-	int i
-	//fd;
-        //double initTimeFile, endTimeFile; 
-        //double result = 0;
-        //double max = 0.0;
-        //double min = 1.0;
-	//char set[2];
+	int i, fd;
+	char set[2];
 	int numCores = sysconf(_SC_NPROCESSORS_ONLN);
 	/*Initialization of RAPL */
 	//aurora_detect_cpu();
@@ -38,6 +33,11 @@ void aurora_init(int metric, int start_search)
 	id_actual_region = MAX_KERNEL - 1;
 	aurora_start_amd_msr();
 	initGlobalTime = omp_get_wtime();
+	
+	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+        sprintf(set, "%d", TURBO_ON);
+	write(fd, set, sizeof(set));
+	close(fd);
         write_file_threshold = 0.00074;
 }
 
