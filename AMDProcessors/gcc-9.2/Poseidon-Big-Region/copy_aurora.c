@@ -5,12 +5,13 @@
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void aurora_init(int metric, int start_search)
 {
-	int i, fd;
-        double initTimeFile, endTimeFile; 
-        double result = 0;
-        double max = 0.0;
-        double min = 1.0;
-	char set[2];
+	int i
+	//fd;
+        //double initTimeFile, endTimeFile; 
+        //double result = 0;
+        //double max = 0.0;
+        //double min = 1.0;
+	//char set[2];
 	int numCores = sysconf(_SC_NPROCESSORS_ONLN);
 	/*Initialization of RAPL */
 	//aurora_detect_cpu();
@@ -37,13 +38,14 @@ void aurora_init(int metric, int start_search)
 	id_actual_region = MAX_KERNEL - 1;
 	aurora_start_amd_msr();
 	initGlobalTime = omp_get_wtime();
-        write_file_threshold = XXXXX;
+        write_file_threshold = 0.00074;
 }
 
 /* It defines the number of threads that will execute the actual region based on the current state of the search algorithm */
 int aurora_resolve_num_threads(uintptr_t ptr_region){
         double time=0, energy=0, result=0; 
-        int i, fd, var_thread;
+        int i, fd;
+	int var_thread=0;
 	char set[2];
 	id_actual_region = -1;
 
