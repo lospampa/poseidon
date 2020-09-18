@@ -46,7 +46,7 @@ void lib_init(int metric, int start_search){
 int lib_resolve_num_threads(uintptr_t ptr_region){
         double time=0, energy=0, result=0;
 	int i, fd;
-        int var_thread;
+        int var_thread = 0;
 	char set[2];
         id_actual_region = -1;
 
