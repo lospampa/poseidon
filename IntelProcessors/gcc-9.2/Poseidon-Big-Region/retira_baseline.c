@@ -96,7 +96,7 @@ void lib_destructor(){
         printf("Poseidon - EDP: %.5f\n", edp);
 	
 	for(int i=0; i<totalKernels; i++){
-		printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThread, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+		printf("%d %lf %lf\n", i, libKernels[i].totalTime, libKernels[i].totalEnergy);
 	}
 }
 
