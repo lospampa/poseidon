@@ -43,6 +43,7 @@
 #define S2                      2
 #define S3                      3
 #define REPEAT                  4  
+#define START			5
 #define PASS                    7
 
 
