@@ -53,7 +53,7 @@ void lib_init(int metric, int start_search){
 int lib_resolve_num_threads(uintptr_t ptr_region){
         double time=0, energy=0, result=0;
 	int i, fd;
-        int var_thread = 0;
+        //int var_thread = 0;
 	char set[2];
         id_actual_region = -1;
 
@@ -81,8 +81,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         }        
          
         /* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
-        libKernels[id_actual_region].idParAnt = id_previous_region;
-	libKernels[id_previous_region].idParPos = id_actual_region;
+        //libKernels[id_actual_region].idParAnt = id_previous_region;
+	//libKernels[id_previous_region].idParPos = id_actual_region;
 
 	
 	//it means that there is no previous region. So it will start the learning algorithm with R1
