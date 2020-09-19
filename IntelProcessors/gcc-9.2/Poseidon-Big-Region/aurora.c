@@ -104,7 +104,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 						result = time * energy;
 						if(result == 0.00000000 || result < 0){
 		                            		libKernels[id_previous_region].state = REPEAT;
-		                            		libKernels[id_previous_region].auroraMetric = PERFORMANCE;
+		                            		libKernels[id_previous_region].metric = PERFORMANCE;
 		                        	}
 		                        	break;
 				}
