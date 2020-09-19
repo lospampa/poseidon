@@ -26,7 +26,7 @@ void lib_init(int metric, int start_search){
                 libKernels[i].initResult = 0.0;
                 libKernels[i].state = START;
                 libKernels[i].metric = metric;
-		libKernels[i].bestFreq = TURBO_OFF;
+		libKernels[i].bestFreq = TURBO_ON;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
 		libKernels[i].totalTime = 0.0;
@@ -42,7 +42,7 @@ void lib_init(int metric, int start_search){
         initGlobalTime = omp_get_wtime();
        
  if(metric == EDP){
-        sprintf(set, "%d", TURBO_OFF);
+        sprintf(set, "%d", TURBO_ON);
         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         write(fd, set, sizeof(set));
         close(fd);
@@ -136,8 +136,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                                                	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads - libKernels[id_previous_region].pass;
 		                                                	libKernels[id_previous_region].state = S2;
 		                                        	}else{
-		                                                	libKernels[id_previous_region].bestFreq = TURBO_ON; //testar com turbo off;
-		                                                	libKernels[id_previous_region].timeTurboOff = time;
+		                                                	libKernels[id_previous_region].bestFreq = TURBO_OFF; //testar com turbo off;
+		                                                	libKernels[id_previous_region].timeTurboOn = time;
 		                                                	libKernels[id_previous_region].state = END_THREADS;
 		                                        	}
 	
@@ -145,8 +145,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                                	}
 		                        	}else{
 		                                	if(libKernels[id_previous_region].bestThread == libKernels[id_previous_region].numCores/2){
-		                                                libKernels[id_previous_region].bestFreq = TURBO_ON;
-		                                                libKernels[id_previous_region].timeTurboOff = time;
+		                                                libKernels[id_previous_region].bestFreq = TURBO_OFF;
+		                                                libKernels[id_previous_region].timeTurboOn = time;
 		                                                libKernels[id_previous_region].state = END_THREADS;
 		                                	}else{
 		                                        	libKernels[id_previous_region].pass = libKernels[id_previous_region].lastThread/2;
@@ -154,8 +154,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                                                	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads + libKernels[id_previous_region].pass;
 		                                                	libKernels[id_previous_region].state = S2;
 		                                       	 	}else{
-		                                                	libKernels[id_previous_region].bestFreq = TURBO_ON;
-		                                                	libKernels[id_previous_region].timeTurboOff = time;
+		                                                	libKernels[id_previous_region].bestFreq = TURBO_OFF;
+		                                                	libKernels[id_previous_region].timeTurboOn = time;
 		                                                	libKernels[id_previous_region].state = END_THREADS;
 		                                        	}
 		                                	}
@@ -168,8 +168,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                                        	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads + libKernels[id_previous_region].pass;
 		                                	}
 		                                	else{
-		                                        	libKernels[id_previous_region].bestFreq = TURBO_ON;
-		                                        	libKernels[id_previous_region].timeTurboOff = time;
+		                                        	libKernels[id_previous_region].bestFreq = TURBO_OFF;
+		                                        	libKernels[id_previous_region].timeTurboOn = time;
 		                                        	libKernels[id_previous_region].state =  END_THREADS;
 		                                	}
 		                        	}else{
@@ -180,8 +180,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                                	if(libKernels[id_previous_region].pass >= 2){
 		                                        	libKernels[id_previous_region].numThreads += libKernels[id_previous_region].pass;
 		                                	}else{
-		                                        	libKernels[id_previous_region].bestFreq = TURBO_ON;
-		                                        	libKernels[id_previous_region].timeTurboOff = time;
+		                                        	libKernels[id_previous_region].bestFreq = TURBO_OFF;
+		                                        	libKernels[id_previous_region].timeTurboOn = time;
 		                                        	libKernels[id_previous_region].state = END_THREADS;
 		                                	}
 		                        	}
@@ -191,7 +191,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                        	libKernels[id_previous_region].timeTurboOn = time;
 						//arthur: tive que fazer isso para garantir que se fosse turbo off, ele voltasse para o off...
 		                        	if(libKernels[id_previous_region].bestResult < result){
-		                                	libKernels[id_previous_region].bestFreq = TURBO_OFF;
+		                                	libKernels[id_previous_region].bestFreq = TURBO_ON;
 							fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			                                sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
 	                		                write(fd, set, sizeof(set));
