@@ -70,7 +70,7 @@ double initGlobalTime = 0.0;
 double write_file_threshold=0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
-short int id_previous_region=0;
+short int id_previous_region=-1;
 short int totalKernels=0;
 
 typedef struct{
@@ -87,7 +87,7 @@ typedef struct{
 	short int idSeq;
 	short int idParAnt;
 	short int idParPos;
-        double bestResult, bestTime, initResult;
+        double bestResult, bestTime, initResult, totalTime, totalEnergy;
         double timeTurboOff, timeTurboOn;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
