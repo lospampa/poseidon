@@ -60,7 +60,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	//matheus, para tirar dado de tempo e energia, descomentar abaixo.
 	//if(libKernels[id_previous_region].state = EDP){
 	//	libKernels[id_previous_region].totalTime += omp_get_wtime() - libKernels[id_previous_region].initResult;
-	//	energy = aurora_end_amd_msr();
+	//	energy = lib_end_rapl_sysfs();
 	//	libKernels[id_previous_region].totalEnergy += energy;		
 	//}
 	
