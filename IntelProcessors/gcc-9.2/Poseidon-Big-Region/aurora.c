@@ -90,7 +90,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		//this is not the first region in the code.
 		else{
 			if(libKernels[id_previous_region].state != END && libKernels[id_actual_region].state != START){
-				switch(libKernels[id_previous_region].auroraMetric){
+				switch(libKernels[id_previous_region].metric){
 					case PERFORMANCE:
 						result = omp_get_wtime() - libKernels[id_previous_region].initResult;
 						time = result;
