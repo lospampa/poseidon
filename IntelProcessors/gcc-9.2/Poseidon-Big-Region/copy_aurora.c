@@ -12,15 +12,20 @@ void lib_init(int metric, int start_search){
         lib_detect_cpu();
         lib_detect_packages();
         /*End initialization of RAPL */
+	
+	int startThreads = numCores;
+	while(startThreads != 2 && startThreads != 3 && startThreads != 5){
+	       startThreads = startThreads/2;
+	}
 
         /* Initialization of the variables necessary to perform the search algorithm */
         for(i=0;i<MAX_KERNEL;i++){
                 libKernels[i].numThreads = numCores;
-                libKernels[i].startThreads = 2;
+                libKernels[i].startThreads = startThreads;
                 libKernels[i].numCores = numCores;
                 libKernels[i].initResult = 0.0;
-                libKernels[i].state = REPEAT;
-                libKernels[i].metric = metric;
+                libKernels[i].state = START;
+                libKernels[i].metric = EDP;
 		libKernels[i].bestFreq = TURBO_ON;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
@@ -58,7 +63,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                 }
         }
 
-        /* If a new parallel region is discovered */
+        /* If a new parallel region is found */
         if(id_actual_region == -1){
                 idKernels[totalKernels] = ptr_region;
                 id_actual_region = totalKernels; 
@@ -82,26 +87,30 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                 energy = lib_end_rapl_sysfs();
                                 result = time * energy;
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
-                                if(result == 0.00000 || result < 0){
+                                if(result == 0.00000000 || result < 0){
                                         libKernels[id_actual_region].state = REPEAT;
                                         libKernels[id_actual_region].metric = PERFORMANCE;
                                 }
                                 break;
                 }      
         switch(libKernels[id_actual_region].state){
+		case START:
+			libKernels[id_actual_region].state = REPEAT;
+			var_thread = libKernels[id_actual_region].numCores;
+			break;
 		case REPEAT:
 		        libKernels[id_actual_region].state = S0;
 		        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
-			var_thread=libKernels[id_actual_region].numThreads;
 			libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
+			var_thread=libKernels[id_actual_region].numThreads;
                         break;
 		case S0:
 			libKernels[id_actual_region].bestResult = result;
 			libKernels[id_actual_region].bestTime = time;
 			libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
 			libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
-			var_thread=libKernels[id_actual_region].numThreads;
 			libKernels[id_actual_region].state = S1;
+			var_thread=libKernels[id_actual_region].numThreads;
 			break;
 		case S1:
 			if(result < libKernels[id_actual_region].bestResult){
@@ -111,13 +120,11 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				if(libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores){
 					libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
 					libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
-					var_thread=libKernels[id_actual_region].numThreads;
 				}
 				else{
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
 					if(libKernels[id_actual_region].pass >= 2){
 					        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
-					        var_thread=libKernels[id_actual_region].numThreads;
 						libKernels[id_actual_region].state = S2;
 					}else{
 						libKernels[id_actual_region].bestFreq = TURBO_OFF; //testar com turbo off;
@@ -125,6 +132,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		        			libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
+				var_thread = auroraKernels[id_actual_region].numThreads;
 			}else{
 				if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
         				libKernels[id_actual_region].bestFreq = TURBO_OFF;
@@ -135,7 +143,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread/2;
 					if(libKernels[id_actual_region].pass >= 2){
 						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-						var_thread=libKernels[id_actual_region].numThreads;
 						libKernels[id_actual_region].state = S2;
 					}else{
 						libKernels[id_actual_region].bestFreq = TURBO_OFF;
@@ -143,6 +150,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 						libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
+				var_thread = auroraKernels[id_actual_region].numThreads;
 			}
 			break;
 		case S2:
@@ -150,7 +158,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
 				if(libKernels[id_actual_region].pass >= 2){
 					libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-					var_thread=libKernels[id_actual_region].numThreads;
 				}
 				else{
 					libKernels[id_actual_region].bestFreq = TURBO_OFF;
@@ -164,13 +171,13 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
 				if(libKernels[id_actual_region].pass >= 2){
 					libKernels[id_actual_region].numThreads += libKernels[id_actual_region].pass;
-					var_thread=libKernels[id_actual_region].numThreads;
 				}else{
 					libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                         libKernels[id_actual_region].timeTurboOn = time;
 					libKernels[id_actual_region].state = END_THREADS;
 				}
 			}
+			var_thread = auroraKernels[id_actual_region].numThreads;
 		        break;
                 case END_THREADS:
 				libKernels[id_actual_region].state = END;
