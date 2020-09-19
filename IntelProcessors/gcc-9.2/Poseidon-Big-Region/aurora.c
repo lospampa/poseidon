@@ -58,7 +58,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		double result=0, time=0, energy=0;
 		
 		//matheus, para tirar dado de tempo e energia, descomentar abaixo.
-		//if(libKernels[id_previous_region].state = END){
+		//if(libKernels[id_previous_region].state == END){
 		//	libKernels[id_previous_region].totalTime += omp_get_wtime() - libKernels[id_previous_region].initResult;
 		//	energy = lib_end_rapl_sysfs();
 		//	libKernels[id_previous_region].totalEnergy += energy;		
