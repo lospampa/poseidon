@@ -51,6 +51,7 @@
 #define S4                      104
 #define S5                      105
 #define REPEAT                  106
+#define START			115
 #define PASS                    107
 
 
