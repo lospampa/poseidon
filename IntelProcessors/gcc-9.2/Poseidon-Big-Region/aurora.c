@@ -25,7 +25,7 @@ void lib_init(int metric, int start_search){
                 libKernels[i].numCores = numCores;
                 libKernels[i].initResult = 0.0;
                 libKernels[i].state = START;
-                libKernels[i].metric = EDP;
+                libKernels[i].metric = metric;
 		libKernels[i].bestFreq = TURBO_OFF;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
@@ -38,12 +38,14 @@ void lib_init(int metric, int start_search){
         id_actual_region = MAX_KERNEL-1;
         lib_start_rapl_sysfs();
         initGlobalTime = omp_get_wtime();
-        
+       
+	if(metric == EDP){
         sprintf(set, "%d", TURBO_OFF);
         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         write(fd, set, sizeof(set));
-        close(fd);    
+        close(fd);
         write_file_threshold = 0.000136;
+	}
 }
 
 
