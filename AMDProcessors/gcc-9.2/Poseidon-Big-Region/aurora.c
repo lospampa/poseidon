@@ -55,6 +55,13 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 	char set[2];
 	double result=0, time=0, energy=0;
 	
+	//matheus, para tirar dado de tempo e energia, descomentar abaixo.
+	//if(auoraKernels[id_previous_region].state = EDP){
+	//	auroraKernels[id_previous_region].totalTime += omp_get_wtime() - auroraKernels[id_previous_region].initResult;
+	//	energy = aurora_end_amd_msr();
+	//	auroraKernels[id_previous_region].totalEnergy += energy;		
+	//}
+	
 	id_actual_region = -1;
 	for (i = 0; i < totalKernels; i++){
         	if (idKernels[i] == ptr_region){
@@ -196,10 +203,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 	//sets the configuration for the current region.
 	switch(auroraKernels[id_actual_region].state){
 		case END:
-			//Matheus: descomentar as três linhas abaixo para pegar a energia e tempo por região.
-			//energy = aurora_end_amd_msr();
-			//auroraKernels[id_previous_region].totalTime += omp_get_wtime() - auroraKernels[id_previous_region].initResult;
-			//auroraKernels[id_previous_region].totalEnergy += energy;
+			
 			//if((auroraKernels[id_previous_region].bestFreq != auroraKernels[id_actual_region].bestFreq && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)) || (auroraKernels[id_previous_region].bestFreq != auroraKernels[id_actual_region].bestFreq && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn))){
 			if((auroraKernels[id_previous_region].bestFreq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq == TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)) || (auroraKernels[id_previous_region].bestFreq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn))){
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
