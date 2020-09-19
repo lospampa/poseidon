@@ -132,7 +132,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		        			libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
-				var_thread = auroraKernels[id_actual_region].numThreads;
+				var_thread = libKernels[id_actual_region].numThreads;
 			}else{
 				if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
         				libKernels[id_actual_region].bestFreq = TURBO_ON;
@@ -150,7 +150,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 						libKernels[id_actual_region].state = END_THREADS;
 					}
 				}
-				var_thread = auroraKernels[id_actual_region].numThreads;
+				var_thread = libKernels[id_actual_region].numThreads;
 			}
 			break;
 		case S2:
@@ -177,7 +177,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 					libKernels[id_actual_region].state = END_THREADS;
 				}
 			}
-			var_thread = auroraKernels[id_actual_region].numThreads;
+			var_thread = libKernels[id_actual_region].numThreads;
 		        break;
                 case END_THREADS:
 				libKernels[id_actual_region].state = END;
