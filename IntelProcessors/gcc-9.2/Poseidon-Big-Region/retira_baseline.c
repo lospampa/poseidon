@@ -4,8 +4,9 @@
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void lib_init(int metric, int start_search){
-       	int i, fd;
-	char set[2];
+       	int i;
+	//int fd;
+	//char set[2];
 
 	int numCores = sysconf(_SC_NPROCESSORS_ONLN);
         /*Initialization of RAPL */
@@ -49,9 +50,12 @@ void lib_init(int metric, int start_search){
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
 int lib_resolve_num_threads(uintptr_t ptr_region){
-	int i, fd;
-	char set[2];
-	double result=0, time=0, energy=0;
+	int i; 
+	//int fd;
+	//char set[2];
+	//double result=0; 
+	//double time=0; 
+	double energy=0;
 		
 	//matheus, para tirar dado de tempo e energia, descomentar abaixo.
 	if(id_previous_region != -1){
