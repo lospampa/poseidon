@@ -4,49 +4,46 @@
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void lib_init(int metric, int start_search){
-        int i, fd;
+       	int i, fd;
 	char set[2];
-        int numCores = sysconf(_SC_NPROCESSORS_ONLN);
+
+	int numCores = sysconf(_SC_NPROCESSORS_ONLN);
         /*Initialization of RAPL */
         lib_detect_cpu();
         lib_detect_packages();
         /*End initialization of RAPL */
+	
 	
 	int startThreads = numCores;
 	while(startThreads != 2 && startThreads != 3 && startThreads != 5){
 	       startThreads = startThreads/2;
 	}
 
-        /* Initialization of the variables necessary to perform the search algorithm */
-        for(i=0;i<MAX_KERNEL;i++){
-                libKernels[i].numThreads = numCores;
-                libKernels[i].startThreads = startThreads;
-                libKernels[i].numCores = numCores;
-                libKernels[i].initResult = 0.0;
-                libKernels[i].state = START;
-                libKernels[i].metric = metric;
-		libKernels[i].bestFreq = TURBO_ON;
-                libKernels[i].timeTurboOff = 0.0;
-                libKernels[i].timeTurboOn = 0.0;
-		libKernels[i].totalTime = 0.0;
-		libKernels[i].totalEnergy=0.0;
-                libKernels[i].idSeq = -1;
-                idKernels[i] = 0;
-                
-        }
 
-        /* Start the counters for energy and time for all the application execution */
-        id_actual_region = MAX_KERNEL-1;
-        lib_start_rapl_sysfs();
-        initGlobalTime = omp_get_wtime();
-       
- if(metric == EDP){
-        sprintf(set, "%d", TURBO_ON);
-        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-        write(fd, set, sizeof(set));
-        close(fd);
-        write_file_threshold = 0.000136;
+	/* Initialization of the variables necessary to perform the search algorithm */
+	for (i = 0; i < MAX_KERNEL; i++)
+	{
+		libKernels[i].numThreads = numCores;
+		libKernels[i].startThreads = startThreads;
+		libKernels[i].numCores = numCores;
+		libKernels[i].initResult = 0.0;
+		libKernels[i].state = START;
+   		libKernels[i].metric = metric;
+		libKernels[i].bestFreq = TURBO_OFF;
+		libKernels[i].timeTurboOff = 0.0;
+		libKernels[i].timeTurboOn = 0.0;
+		libKernels[i].idSeq = -1;
+		libKernels[i].totalTime = 0.0;
+		libKernels[i].totalEnergy = 0.0;
+		idKernels[i] = 0;
 	}
+
+
+	/* Start the counters for energy and time for all the application execution */
+	id_actual_region = MAX_KERNEL - 1;
+	lib_start_rapl_sysfs();
+	initGlobalTime = omp_get_wtime();
+
 }
 
 
