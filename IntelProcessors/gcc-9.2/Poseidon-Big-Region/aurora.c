@@ -29,6 +29,8 @@ void lib_init(int metric, int start_search){
 		libKernels[i].bestFreq = TURBO_OFF;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
+		libKernels[i].totalTime = 0.0;
+		libKernels[i].totalEnergy=0.0;
                 libKernels[i].idSeq = -1;
                 idKernels[i] = 0;
                 
@@ -39,7 +41,7 @@ void lib_init(int metric, int start_search){
         lib_start_rapl_sysfs();
         initGlobalTime = omp_get_wtime();
        
-	if(metric == EDP){
+ if(metric == EDP){
         sprintf(set, "%d", TURBO_OFF);
         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         write(fd, set, sizeof(set));
@@ -55,7 +57,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	int i, fd;
         //int var_thread = 0;
 	char set[2];
-        id_actual_region = -1;
+   
 
 	//matheus, para tirar dado de tempo e energia, descomentar abaixo.
 	//if(libKernels[id_previous_region].state = EDP){
@@ -64,6 +66,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	//	libKernels[id_previous_region].totalEnergy += energy;		
 	//}
 	
+	id_actual_region = -1;
         /* Find the actual parallel region */
         for(i=0;i<totalKernels;i++){
                 if(idKernels[i] == ptr_region){
@@ -93,6 +96,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	        lib_start_rapl_sysfs();
 	        return libKernels[id_actual_region].numCores;
 	} else {
+		
+	if(libKernels[id_previous_region].state != END && libKernels[id_actual_region].state != START){
 	switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
                                 result = omp_get_wtime() - libKernels[id_actual_region].initResult;
@@ -108,10 +113,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                         libKernels[id_actual_region].metric = PERFORMANCE;
                                 }
                           break;
-                }     
+         }     
 		
-        if(libKernels[id_previous_region].state != END && libKernels[id_actual_region].state != START){
-        
 	switch(libKernels[id_previous_region].state){
 		case REPEAT:
 		        libKernels[id_previous_region].state = S0;
