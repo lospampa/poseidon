@@ -53,213 +53,207 @@ void lib_init(int metric, int start_search){
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
 int lib_resolve_num_threads(uintptr_t ptr_region){
-        double time=0, energy=0, result=0;
-	int i, fd;
-        //int var_thread = 0;
-	char set[2];
-   
-
-	//matheus, para tirar dado de tempo e energia, descomentar abaixo.
-	//if(libKernels[id_previous_region].state = EDP){
-	//	libKernels[id_previous_region].totalTime += omp_get_wtime() - libKernels[id_previous_region].initResult;
-	//	energy = lib_end_rapl_sysfs();
-	//	libKernels[id_previous_region].totalEnergy += energy;		
-	//}
-	
-	id_actual_region = -1;
-        /* Find the actual parallel region */
-        for(i=0;i<totalKernels;i++){
-                if(idKernels[i] == ptr_region){
-                        id_actual_region = i;  
-                        break;
-                }
-        }
-
-        /* If a new parallel region is found */
-        if(id_actual_region == -1){
-                idKernels[totalKernels] = ptr_region;
-                id_actual_region = totalKernels; 
-                //libKernels[id_actual_region].idSeq = id_actual_region + 1;
-                totalKernels++;                     
-        }        
-         
-        /* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
-        //libKernels[id_actual_region].idParAnt = id_previous_region;
-	//libKernels[id_previous_region].idParPos = id_actual_region;
-
-	
-	//it means that there is no previous region. So it will start the learning algorithm with R1
-	if(id_previous_region == -1){
-	        libKernels[id_actual_region].state = REPEAT;
-	        id_previous_region = id_actual_region;
-	        libKernels[id_actual_region].initResult = omp_get_wtime();
-	        lib_start_rapl_sysfs();
-	        return libKernels[id_actual_region].numCores;
-	} else {
+       	int i, fd;
+		char set[2];
+		double result=0, time=0, energy=0;
 		
-	if(libKernels[id_previous_region].state != END && libKernels[id_actual_region].state != START){
-	switch(libKernels[id_actual_region].metric){
-                        case PERFORMANCE:
-                                result = omp_get_wtime() - libKernels[id_actual_region].initResult;
-				time = result;
-                                break;
-                        case EDP:
-                                time = omp_get_wtime() - libKernels[id_actual_region].initResult;
-                                energy = lib_end_rapl_sysfs();
-                                result = time * energy;
-                                /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
-                                if(result == 0.00000000 || result < 0){
-                                        libKernels[id_actual_region].state = REPEAT;
-                                        libKernels[id_actual_region].metric = PERFORMANCE;
-                                }
-                          break;
-         }     
+		//matheus, para tirar dado de tempo e energia, descomentar abaixo.
+		//if(libKernels[id_previous_region].state = EDP){
+		//	libKernels[id_previous_region].totalTime += omp_get_wtime() - libKernels[id_previous_region].initResult;
+		//	energy = lib_end_rapl_sysfs();
+		//	libKernels[id_previous_region].totalEnergy += energy;		
+		//}
 		
-	switch(libKernels[id_previous_region].state){
-		case REPEAT:
-		        libKernels[id_previous_region].state = S0;
-		        libKernels[id_previous_region].numThreads = libKernels[id_previous_region].startThreads;
-			libKernels[id_previous_region].lastThread = libKernels[id_previous_region].numThreads; 
-                        break;
-		case S0:
-			libKernels[id_previous_region].bestResult = result;
-			libKernels[id_previous_region].bestTime = time;
-			libKernels[id_previous_region].bestThreadOn = libKernels[id_previous_region].numThreads;
-			libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads*2;
-			libKernels[id_previous_region].state = S1;
-			break;
-		case S1:
-			if(result < libKernels[id_previous_region].bestResult){
-				libKernels[id_previous_region].bestResult = result;
-				libKernels[id_previous_region].bestTime = time;
-				libKernels[id_previous_region].bestThreadOn = libKernels[id_previous_region].numThreads;
-				if(libKernels[id_previous_region].numThreads * 2 <= libKernels[id_previous_region].numCores){
-					libKernels[id_previous_region].lastThread = libKernels[id_previous_region].numThreads;
-					libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads*2;
+		id_actual_region = -1;
+		for (i = 0; i < totalKernels; i++){
+	        	if (idKernels[i] == ptr_region){
+	            		id_actual_region = i;
+	            		break;
+	        	}
+	    	}
+		/* If a new region of interest is found */
+	    	if (id_actual_region == -1){
+	            	idKernels[totalKernels] = ptr_region;
+	            	id_actual_region = totalKernels;
+	            	//libKernels[id_actual_region].idSeq = id_actual_region + 1;
+	            	totalKernels++;
+	    	}
+
+		//it means that there is no previous region. So it will start the learning algorithm with R1
+		if(id_previous_region == -1){
+		        libKernels[id_actual_region].state = REPEAT;
+		        id_previous_region = id_actual_region;
+		        libKernels[id_actual_region].initResult = omp_get_wtime();
+		        lib_start_rapl_sysfs();
+		        return libKernels[id_actual_region].numCores;
+		}
+		//this is not the first region in the code.
+		else{
+			if(libKernels[id_previous_region].state != END && libKernels[id_actual_region].state != START){
+				switch(libKernels[id_previous_region].auroraMetric){
+					case PERFORMANCE:
+						result = omp_get_wtime() - libKernels[id_previous_region].initResult;
+						time = result;
+						libKernels[id_previous_region].totalTime += time;
+						break;
+					case EDP:
+						time = omp_get_wtime() - libKernels[id_previous_region].initResult;
+						libKernels[id_previous_region].totalTime +=time;
+						energy = lib_end_rapl_sysfs();
+						libKernels[id_previous_region].totalEnergy += energy;
+						result = time * energy;
+						if(result == 0.00000000 || result < 0){
+		                            		libKernels[id_previous_region].state = REPEAT;
+		                            		libKernels[id_previous_region].auroraMetric = PERFORMANCE;
+		                        	}
+		                        	break;
 				}
-				else{
-					libKernels[id_previous_region].pass = libKernels[id_actual_region].lastThread/2;
-					if(libKernels[id_actual_region].pass >= 2){
-					        libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads - libKernels[id_previous_region].pass;
-						libKernels[id_previous_region].state = S2;
-					}else{
-						libKernels[id_previous_region].bestFreq = TURBO_ON; //testar com turbo off;
-                                                libKernels[id_previous_region].timeTurboOff = time;
-		        			libKernels[id_previous_region].state = END_THREADS;
-					}
-				}
-			}else{
-				if(libKernels[id_previous_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
-        				libKernels[id_previous_region].bestFreq = TURBO_ON;
-                                        libKernels[id_previous_region].timeTurboOff = time;
-					libKernels[id_previous_region].state = END_THREADS;
-                                  
-				}else{
-					libKernels[id_previous_region].pass = libKernels[id_previous_region].lastThread/2;
-					if(libKernels[id_previous_region].pass >= 2){
-						libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads + libKernels[id_previous_region].pass;
-						libKernels[id_previous_region].state = S2;
-					}else{
-						libKernels[id_previous_region].bestFreq = TURBO_ON;
-                                                libKernels[id_previous_region].timeTurboOff = time;
-						libKernels[id_previous_region].state = END_THREADS;
-					}
+				switch(libKernels[id_previous_region].state){
+					case REPEAT:
+						libKernels[id_previous_region].state = S0;
+		                        	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].startThreads;
+		                        	libKernels[id_previous_region].lastThread = libKernels[id_previous_region].numThreads;
+		                        	break;
+		                   	 case S0:
+		                    		libKernels[id_previous_region].bestResult = result;
+		                        	libKernels[id_previous_region].bestTime = time;
+		                        	libKernels[id_previous_region].bestThread = libKernels[id_previous_region].numThreads;
+		                        	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads*2;
+		                        	libKernels[id_previous_region].state = S1;
+		                        	break;
+		                    	case S1:
+		                    		if(result < libKernels[id_previous_region].bestResult){
+		                                	libKernels[id_previous_region].bestResult = result;
+		                                	libKernels[id_previous_region].bestTime = time;
+		                                	libKernels[id_previous_region].bestThread = libKernels[id_previous_region].numThreads;
+		                                	if(libKernels[id_previous_region].numThreads * 2 <= libKernels[id_previous_region].numCores){
+		                                        	libKernels[id_previous_region].lastThread = libKernels[id_previous_region].numThreads;
+		                                        	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads*2;
+		                                	}
+		                                	else{
+		                                        	libKernels[id_previous_region].pass = libKernels[id_previous_region].lastThread/2;
+		                                        	if(libKernels[id_previous_region].pass >= 2){
+		                                                	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads - libKernels[id_previous_region].pass;
+		                                                	libKernels[id_previous_region].state = S2;
+		                                        	}else{
+		                                                	libKernels[id_previous_region].bestFreq = TURBO_ON; //testar com turbo off;
+		                                                	libKernels[id_previous_region].timeTurboOff = time;
+		                                                	libKernels[id_previous_region].state = END_THREADS;
+		                                        	}
+	
+
+		                                	}
+		                        	}else{
+		                                	if(libKernels[id_previous_region].bestThread == libKernels[id_previous_region].numCores/2){
+		                                                libKernels[id_previous_region].bestFreq = TURBO_ON;
+		                                                libKernels[id_previous_region].timeTurboOff = time;
+		                                                libKernels[id_previous_region].state = END_THREADS;
+		                                	}else{
+		                                        	libKernels[id_previous_region].pass = libKernels[id_previous_region].lastThread/2;
+		                                        	if(libKernels[id_previous_region].pass >= 2){
+		                                                	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads + libKernels[id_previous_region].pass;
+		                                                	libKernels[id_previous_region].state = S2;
+		                                       	 	}else{
+		                                                	libKernels[id_previous_region].bestFreq = TURBO_ON;
+		                                                	libKernels[id_previous_region].timeTurboOff = time;
+		                                                	libKernels[id_previous_region].state = END_THREADS;
+		                                        	}
+		                                	}
+		                        	}
+		                        	break;
+					case S2:
+		                        	if(libKernels[id_previous_region].bestResult < result){
+		                                	libKernels[id_previous_region].pass = libKernels[id_previous_region].pass/2;
+		                                	if(libKernels[id_previous_region].pass >= 2){
+		                                        	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads + libKernels[id_previous_region].pass;
+		                                	}
+		                                	else{
+		                                        	libKernels[id_previous_region].bestFreq = TURBO_ON;
+		                                        	libKernels[id_previous_region].timeTurboOff = time;
+		                                        	libKernels[id_previous_region].state =  END_THREADS;
+		                                	}
+		                        	}else{
+		                                	libKernels[id_previous_region].bestThread = libKernels[id_previous_region].numThreads;
+		                                	libKernels[id_previous_region].bestTime = time;
+		                                	libKernels[id_previous_region].bestResult = result;
+		                                	libKernels[id_previous_region].pass = libKernels[id_previous_region].pass/2;
+		                                	if(libKernels[id_previous_region].pass >= 2){
+		                                        	libKernels[id_previous_region].numThreads += libKernels[id_previous_region].pass;
+		                                	}else{
+		                                        	libKernels[id_previous_region].bestFreq = TURBO_ON;
+		                                        	libKernels[id_previous_region].timeTurboOff = time;
+		                                        	libKernels[id_previous_region].state = END_THREADS;
+		                                	}
+		                        	}
+		                        	break;
+		                    	case END_THREADS:
+		                        	libKernels[id_previous_region].state = END;
+		                        	libKernels[id_previous_region].timeTurboOn = time;
+						//arthur: tive que fazer isso para garantir que se fosse turbo off, ele voltasse para o off...
+		                        	if(libKernels[id_previous_region].bestResult < result){
+		                                	libKernels[id_previous_region].bestFreq = TURBO_OFF;
+							fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+			                                sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+	                		                write(fd, set, sizeof(set));
+	                                		close(fd);
+		                        	}
+		                        	break;
 				}
 			}
-			break;
-		case S2:
-			if(libKernels[id_previous_region].bestResult < result){
-				libKernels[id_previous_region].pass = libKernels[id_previous_region].pass/2;
-				if(libKernels[id_previous_region].pass >= 2){
-					libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads + libKernels[id_previous_region].pass;
-				}
-				else{
-					libKernels[id_previous_region].bestFreq = TURBO_ON;
-                                        libKernels[id_previous_region].timeTurboOn = time;
-					libKernels[id_previous_region].state = END_THREADS;
-				}
-			}else{
-				libKernels[id_previous_region].bestThreadOn = libKernels[id_actual_region].numThreads;
-				libKernels[id_previous_region].bestTime = time;
-				libKernels[id_previous_region].bestResult = result;
-				libKernels[id_previous_region].pass = libKernels[id_previous_region].pass/2;
-				if(libKernels[id_previous_region].pass >= 2){
-					libKernels[id_previous_region].numThreads += libKernels[id_previous_region].pass;
-				}else{
-					libKernels[id_previous_region].bestFreq = TURBO_ON;
-                                        libKernels[id_previous_region].timeTurboOff = time;
-					libKernels[id_previous_region].state = END_THREADS;
-				}
-			}
-		        break;
-                case END_THREADS:
-				libKernels[id_previous_region].state = END;
-				libKernels[id_previous_region].timeTurboOn = time;
-				if(libKernels[id_previous_region].bestResult < result){
-					libKernels[id_previous_region].bestFreq = TURBO_OFF;
+		}
+	
+
+		//sets the configuration for the current region.
+		switch(libKernels[id_actual_region].state){
+			case END:
+				
+				//if((libKernels[id_previous_region].bestFreq != libKernels[id_actual_region].bestFreq && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (libKernels[id_previous_region].bestFreq != libKernels[id_actual_region].bestFreq && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
+				if((libKernels[id_previous_region].bestFreq == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (libKernels[id_previous_region].bestFreq == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
 					fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-		                        sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-                		        write(fd, set, sizeof(set));
-                                	close(fd);
-				}
-                        	break;
-        	}
-		
-	}
-}
-	
-	//sets the configuration for the current region.
-	switch(libKernels[id_actual_region].state){
-		case END:
-			//if((auroraKernels[id_previous_region].bestFreq != auroraKernels[id_actual_region].bestFreq && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)) || (auroraKernels[id_previous_region].bestFreq != auroraKernels[id_actual_region].bestFreq && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn))){
-			if((libKernels[id_previous_region].bestFreq == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (libKernels[id_previous_region].bestFreq == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
-				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-        	            	sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-        	            	write(fd, set, sizeof(set));
-        	            	close(fd);
-        	    	}
-			//Matheus: descomentar as duas linhas abaixo para pegar a energia e tempo por região
-            		//libKernels[id_actual_region].initResult = omp_get_wtime();
-            		//lib_start_rapl_sysfs();
-        	    	id_previous_region = id_actual_region;
-        	    	return libKernels[id_actual_region].bestThread;
-	        case END_THREADS:
-        		if(libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq && libKernels[id_actual_region].timeTurboOff > write_file_threshold){
-                    		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-                    		sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-                    		write(fd, set, sizeof(set));
-                    		close(fd);
-            		}
-            		libKernels[id_actual_region].initResult = omp_get_wtime();
-            		lib_start_rapl_sysfs();
-            		id_previous_region = id_actual_region;
-            		return libKernels[id_actual_region].bestThread;
-        	case START:
-        		libKernels[id_actual_region].state = REPEAT;
-       			if(libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq){
-                    		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-                    		sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-                    		write(fd, set, sizeof(set));
-                    		close(fd);
-            		}
-            		libKernels[id_actual_region].initResult = omp_get_wtime();
-            		lib_start_rapl_sysfs();
-            		id_previous_region = id_actual_region;
-            		return libKernels[id_actual_region].numCores;
-        	default:
-        		if(libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq){
-                    		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-                    		sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
-                    		write(fd, set, sizeof(set));
-                    		close(fd);
-            		}
-            		libKernels[id_actual_region].initResult = omp_get_wtime();
-            		lib_start_rapl_sysfs();
-            		id_previous_region = id_actual_region;
-            		return libKernels[id_actual_region].numThreads;
-	}
-		
-		
+	        	            	sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+	        	            	write(fd, set, sizeof(set));
+	        	            	close(fd);
+	        	    	}
+				//Matheus: descomentar as duas linhas abaixo para pegar a energia e tempo por região
+	            		//libKernels[id_actual_region].initResult = omp_get_wtime();
+	            		//lib_start_rapl_sysfs();
+	        	    	id_previous_region = id_actual_region;
+	        	    	return libKernels[id_actual_region].bestThread;
+		        case END_THREADS:
+	        		if(libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq && libKernels[id_actual_region].timeTurboOff > write_file_threshold){
+	                    		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+	                    		sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+	                    		write(fd, set, sizeof(set));
+	                    		close(fd);
+	            		}
+	            		libKernels[id_actual_region].initResult = omp_get_wtime();
+	            		lib_start_rapl_sysfs();
+	            		id_previous_region = id_actual_region;
+	            		return libKernels[id_actual_region].bestThread;
+	        	case START:
+	        		libKernels[id_actual_region].state = REPEAT;
+	       			if(libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq){
+	                    		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+	                    		sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+	                    		write(fd, set, sizeof(set));
+	                    		close(fd);
+	            		}
+	            		libKernels[id_actual_region].initResult = omp_get_wtime();
+	            		lib_start_rapl_sysfs();
+	            		id_previous_region = id_actual_region;
+	            		return libKernels[id_actual_region].numCores;
+	        	default:
+	        		if(libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].bestFreq){
+	                    		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+	                    		sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
+	                    		write(fd, set, sizeof(set));
+	                    		close(fd);
+	            		}
+	            		libKernels[id_actual_region].initResult = omp_get_wtime();
+	            		lib_start_rapl_sysfs();
+	            		id_previous_region = id_actual_region;
+	            		return libKernels[id_actual_region].numThreads;
+		}
 
         
 }
