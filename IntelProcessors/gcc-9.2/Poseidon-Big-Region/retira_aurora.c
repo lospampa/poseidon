@@ -207,6 +207,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         }
 
 }
+}
+
 
 /* It finalizes the environment of Aurora */
 void lib_destructor(){
