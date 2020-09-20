@@ -82,7 +82,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	//this is not the first region in the code.
 	else{
 		if(libKernels[id_previous_region].state != END && libKernels[id_actual_region].state != START){
-			switch(libKernels[id_previous_region].auroraMetric){
+			switch(libKernels[id_previous_region].metric){
 				case PERFORMANCE:
 					result = omp_get_wtime() - libKernels[id_previous_region].initResult;
 					time = result;
@@ -96,10 +96,11 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 					result = time * energy;
 					if(result == 0.00000000 || result < 0){
 	                            		libKernels[id_previous_region].state = REPEAT;
-	                            		libKernels[id_previous_region].auroraMetric = PERFORMANCE;
+	                            		libKernels[id_previous_region].metric = PERFORMANCE;
 	                        	}
 	                        	break;
 			}
+		
 			switch(libKernels[id_previous_region].state){
 		case REPEAT:
                                 libKernels[id_previous_region].state = S0;
@@ -202,8 +203,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
             		lib_start_rapl_sysfs();
             		id_previous_region = id_actual_region;
             		return libKernels[id_actual_region].numThreads;
-	}
-        
+	
+        }
 
 }
 
