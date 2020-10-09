@@ -5,10 +5,6 @@
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void lib_init(int metric, int start_search){
         int i, fd;
-	double initTimeFile, endTimeFile; 
-        double result = 0;
-        double max = 0.0;
-        double min = 1.0;
         char set[2];
         int numCores = sysconf(_SC_NPROCESSORS_ONLN);
         /*Initialization of RAPL */
@@ -16,10 +12,15 @@ void lib_init(int metric, int start_search){
         lib_detect_packages();
         /*End initialization of RAPL */
 
+        int startThreads = numCores;
+	while(startThreads != 2 && startThreads != 3 && startThreads != 5){
+	       startThreads = startThreads/2;
+	}
+
         /* Initialization of the variables necessary to perform the search algorithm */
         for(i=0;i<MAX_KERNEL;i++){
                 libKernels[i].numThreads = numCores;
-                libKernels[i].startThreads = 2;
+                libKernels[i].startThreads = startThreads;
                 libKernels[i].numCores = numCores;
                 libKernels[i].initResult = 0.0;
                 libKernels[i].state = REPEAT;
@@ -39,24 +40,14 @@ void lib_init(int metric, int start_search){
         lib_start_rapl_sysfs();
         initGlobalTime = omp_get_wtime();
 	
-	/* Find the cost of writing the turbo file. Also activates Turbo Core in the first iteration */
-	for(i=0;i<10;i++){
-		initTimeFile = omp_get_wtime();
-		sprintf(set, "%d", TURBO_OFF);
-		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-		write(fd, set, sizeof(set));
-		close(fd);      	
-	
-		sprintf(set, "%d", TURBO_ON);
-		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-		write(fd, set, sizeof(set));
-		close(fd);    
-                endTimeFile = omp_get_wtime() - initTimeFile;
-                min = (endTimeFile <= min) ? endTimeFile : min;
-                max = (endTimeFile >= max) ? endTimeFile : max;           
-		result += endTimeFile;
-	}
-        write_file_threshold = (result - (min+max))/8;
+	/* Find the cost of writing the turbo file. Also activates Turbo Core in the first iteration */	
+        if(metric == EDP){
+	        sprintf(set, "%d", TURBO_ON);
+	        fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+	        write(fd, set, sizeof(set));
+	        close(fd);    
+                write_file_threshold = 0.000136;
+        }
 }
 
 
@@ -254,7 +245,7 @@ void lib_end_parallel_region(){
 			initSeqTime = omp_get_wtime();
 			break;
 		case END_TURBO:
-			if (libKernels[id_actual_region].bestFreq != libKernels[id_actual_region].bestFreqSeq){
+			if (libKernels[id_actual_region].bestFreq != libKernels[id_actual_region].bestFreqSeq && write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn){
                 		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         			sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
 	        		write(fd, set, sizeof(set));
