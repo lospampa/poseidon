@@ -27,6 +27,7 @@ void aurora_init(int metric, int start_search)
 		auroraKernels[i].initResult = 0.0;
 		auroraKernels[i].state = REPEAT;
                 auroraKernels[i].auroraMetric = metric;
+		auroraKernels[i].seqMetric = metric;
 		auroraKernels[i].bestFreq = TURBO_OFF;
                 auroraKernels[i].bestFreqSeq = TURBO_OFF;
 		auroraKernels[i].timeTurboOff = 0.0;
@@ -58,23 +59,45 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 {
 	int i, fd;
 	char set[2];
+	double time=0, energy=0, result=0;
 	id_actual_region = -1;
+        
+        if(auroraKernels[id_previous_region].seqState != END_SEQUENTIAL && auroraKernels[id_previous_region].seqState != PASS){
+                switch(auroraKernels[id_previous_region].seqMetric){
+                                case PERFORMANCE:
+                                        result = omp_get_wtime() - initSeqTime;
+                                        time = result;
+                                        break;
+                                case EDP:
+                                        time = omp_get_wtime() - initSeqTime;
+                                        energy = aurora_end_amd_msr();
+                                        result = time * energy;
+                                        /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
+                                        if(result == 0.00000 || result < 0){
+                                                auroraKernels[id_previous_region].seqState = PASS;
+                                                auroraKernels[id_previous_region].seqMetric = PERFORMANCE;
+                                                auroraKernels[id_previous_region].bestFreqSeq = TURBO_ON;
+                                        }
+                                        break;
+                        }
 
-
-        switch (auroraKernels[id_previous_region].seqState)
-        {
-        case INITIAL:
-                auroraKernels[id_previous_region].timeSeqTurboOff = omp_get_wtime() - initSeqTime;
-                auroraKernels[id_previous_region].bestFreqSeq = TURBO_ON;
-                auroraKernels[id_previous_region].seqState = END_TURBO;
-                break;
-        case END_TURBO:
-                auroraKernels[id_previous_region].timeSeqTurboOn = omp_get_wtime() - initSeqTime;
-                auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;
-                if(auroraKernels[id_previous_region].timeSeqTurboOn > auroraKernels[id_previous_region].timeSeqTurboOff){
-                        auroraKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
+                switch (auroraKernels[id_previous_region].seqState)
+                {
+                        case INITIAL:
+                                auroraKernels[id_previous_region].timeSeqTurboOff = time;
+                                auroraKernels[id_previous_region].resultSeqTurboOff = result;
+                                auroraKernels[id_previous_region].bestFreqSeq = TURBO_ON;
+                                auroraKernels[id_previous_region].seqState = END_TURBO;
+                                break;
+                        case END_TURBO:
+                                auroraKernels[id_previous_region].timeSeqTurboOn = time;
+                                auroraKernels[id_previous_region].resultSeqTurboOn = result;
+                                auroraKernels[id_previous_region].seqState = END_SEQUENTIAL;
+                                if(auroraKernels[id_previous_region].resultSeqTurboOff < auroraKernels[id_previous_region].resultSeqTurboOn){
+                                        auroraKernels[id_previous_region].bestFreqSeq = TURBO_OFF;
+                                }
+                                break;
                 }
-                break;
         }
 
 
@@ -254,7 +277,14 @@ void aurora_end_parallel_region(){
 	switch(auroraKernels[id_actual_region].seqState){
                 case PASS:
 			auroraKernels[id_actual_region].seqState = INITIAL;
+			if (auroraKernels[id_actual_region].bestFreq != auroraKernels[id_actual_region].bestFreqSeq){
+                		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
+        			sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
+	        		write(fd, set, sizeof(set));
+	        		close(fd);
+			}
 			initSeqTime = omp_get_wtime();
+			aurora_start_amd_msr();
 			break;
 		case END_TURBO:
 			if (auroraKernels[id_actual_region].bestFreq != auroraKernels[id_actual_region].bestFreqSeq && write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff){
@@ -264,6 +294,7 @@ void aurora_end_parallel_region(){
 	        		close(fd);
 			}
 			initSeqTime = omp_get_wtime();
+			aurora_start_amd_msr();
 			break;
 		case END_SEQUENTIAL:
 			if((auroraKernels[id_actual_region].bestFreq == TURBO_OFF && auroraKernels[id_actual_region].bestFreqSeq == TURBO_ON && (auroraKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff)) || (auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOn))){
