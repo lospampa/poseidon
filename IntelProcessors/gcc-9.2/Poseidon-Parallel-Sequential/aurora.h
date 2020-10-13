@@ -84,6 +84,7 @@ typedef struct{
         short int bestThreadOn;
 	short int startThreads;
         short int metric;
+        short int seqMetric;
         short int state;
         short int seqState;
         int bestFreq;
@@ -94,7 +95,7 @@ typedef struct{
 	short int idParAnt;
 	short int idParPos;
         double bestResult, bestTime, initResult;
-        double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff;
+        double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff, resultSeqTurboOn, resultSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
