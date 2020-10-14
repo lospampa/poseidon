@@ -111,13 +111,13 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         if(id_actual_region == -1){
                 idKernels[totalKernels] = ptr_region;
                 id_actual_region = totalKernels; 
-                libKernels[id_actual_region].idSeq = id_actual_region + 1;
+                //libKernels[id_actual_region].idSeq = id_actual_region + 1;
                 totalKernels++;                     
         }        
          
         /* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
-        libKernels[id_actual_region].idParAnt = id_previous_region;
-	libKernels[id_previous_region].idParPos = id_actual_region;
+        //libKernels[id_actual_region].idParAnt = id_previous_region;
+	//libKernels[id_previous_region].idParPos = id_actual_region;
 
 
         /* Check the state of the search algorithm. */
