@@ -110,21 +110,20 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				}
 				switch(libKernels[id_previous_region].state){
 					case REPEAT:
-					printf("REPEAT- Região %d, Número de Threads: %d\n", id_previous_region, libKernels[id_previous_region].numThreads);
 						libKernels[id_previous_region].state = S0;
 		                        	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].startThreads;
 		                        	libKernels[id_previous_region].lastThread = libKernels[id_previous_region].numThreads;
+					printf("REPEAT - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_previous_region, libKernels[id_previous_region].numThreads, result, libKernels[id_previous_region].bestResult);
 		                        	break;
-		                   	 case S0:
-					printf("S0 - Região %d, Número de Threads: %d\n", id_previous_region, libKernels[id_previous_region].numThreads);
+		                   	case S0:
 		                    		libKernels[id_previous_region].bestResult = result;
 		                        	libKernels[id_previous_region].bestTime = time;
 		                        	libKernels[id_previous_region].bestThread = libKernels[id_previous_region].numThreads;
 		                        	libKernels[id_previous_region].numThreads = libKernels[id_previous_region].numThreads*2;
 		                        	libKernels[id_previous_region].state = S1;
+					printf("S0 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_previous_region, libKernels[id_previous_region].numThreads, result, libKernels[id_previous_region].bestResult);
 		                        	break;
 		                    	case S1:
-					printf("S1 - Região %d, Número de Threads: %d\n", id_previous_region, libKernels[id_previous_region].numThreads);
 		                    		if(result < libKernels[id_previous_region].bestResult){
 		                                	libKernels[id_previous_region].bestResult = result;
 		                                	libKernels[id_previous_region].bestTime = time;
@@ -163,9 +162,9 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                                        	}
 		                                	}
 		                        	}
+					printf("S1 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_previous_region, libKernels[id_previous_region].numThreads, result, libKernels[id_previous_region].bestResult);
 		                        	break;
 					case S2:
-					printf("S2 - Região %d, Número de Threads: %d\n", id_previous_region, libKernels[id_previous_region].numThreads);
 		                        	if(libKernels[id_previous_region].bestResult < result){
 		                                	libKernels[id_previous_region].pass = libKernels[id_previous_region].pass/2;
 		                                	if(libKernels[id_previous_region].pass >= 2){
@@ -189,9 +188,10 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 		                                        	libKernels[id_previous_region].state = END_THREADS;
 		                                	}
 		                        	}
+					printf("S2 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_previous_region, libKernels[id_previous_region].numThreads, result, libKernels[id_previous_region].bestResult);
 		                        	break;
 		                    	case END_THREADS:
-					printf("END_THREADS - Região %d, Número de Threads: %d\n", id_previous_region, libKernels[id_previous_region].numThreads);
+					printf("END_THREADS - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_previous_region, libKernels[id_previous_region].numThreads, result, libKernels[id_previous_region].bestResult);
 		                        	libKernels[id_previous_region].state = END;
 		                        	libKernels[id_previous_region].timeTurboOn = time;
 						//arthur: tive que fazer isso para garantir que se fosse turbo off, ele voltasse para o off...
