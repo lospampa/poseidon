@@ -212,29 +212,22 @@ parse_schedule (void)
 
 static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
         char *env = getenv(name);
-        if(env == NULL){
+        if(env == NULL || (strcmp("false",env) == 0) || (strcmp("FALSE",env) == 0)){
                 printf("POSEIDON: Disabled\n");
                 lib_init(3,0);
                 *pvalue = -1;
                 return false;
         }
-        if( (strcmp("performance",env) == 0) || (strcmp("PERFORMANCE",env) == 0)){
-                printf("POSEIDON - OpenMP Application Optimized for Performance\n");
-                *pvalue = 0;
-        }
-        else if( (strcmp("edp",env) == 0) || (strcmp("EDP",env) == 0)){
+        if((strcmp("true",env) == 0) || (strcmp("TRUE",env) == 0)){
                 printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
         }else{
                 printf("POSEIDON - Optimization not recognized!\n");
-                printf(" -- OpenMP Application Optimized for Performance by default\n");
-                *pvalue = 0;
+                printf("OpenMP Application Optimized for EDP by default\n");
+                *pvalue = 2;
                 printf("\n\t\tPlease:\n");
-                printf("\t\tTo optimize performance: export OMP_POSEIDON=PERFORMANCE or export OMP_POSEIDON=performance\n");
-                printf("\t\tTo optimize edp: export OMP_POSEIDON=EDP or export OMP_POSEIDON=edp\n");
+                printf("\t\tTo optimize EDP: export OMP_POSEIDON=TRUE or export OMP_POSEIDON=true\n");
         }
-		
-
         return true;
 }
 

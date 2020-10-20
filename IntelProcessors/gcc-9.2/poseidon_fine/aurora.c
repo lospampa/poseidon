@@ -30,7 +30,6 @@ void lib_init(int metric, int start_search){
                 libKernels[i].bestFreqSeq = TURBO_ON;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
-                libKernels[i].idSeq = -1;
                 libKernels[i].seqState = PASS;
                 idKernels[i] = 0;
                 
@@ -111,13 +110,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         if(id_actual_region == -1){
                 idKernels[totalKernels] = ptr_region;
                 id_actual_region = totalKernels; 
-                //libKernels[id_actual_region].idSeq = id_actual_region + 1;
                 totalKernels++;                     
         }        
-         
-        /* Informs the actual parallel region which was the previous parallel region and Informs the previous parallel region which is the next parallel region*/
-        //libKernels[id_actual_region].idParAnt = id_previous_region;
-	//libKernels[id_previous_region].idParPos = id_actual_region;
 
 
         /* Check the state of the search algorithm. */
@@ -129,7 +123,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			write(fd, set, sizeof(set));
 			close(fd);
                         }
-               		return libKernels[id_actual_region].bestThreadOn;
+               		return libKernels[id_actual_region].bestThread;
 			break;
 		case END_THREADS:
 			if(libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
@@ -138,7 +132,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				write(fd, set, sizeof(set));
 				close(fd);
 			}
-               		return libKernels[id_actual_region].bestThreadOn;
+               		return libKernels[id_actual_region].bestThread;
 			break;
                 default:
                         lib_start_rapl_sysfs();
@@ -187,7 +181,7 @@ void lib_end_parallel_region(){
 			case S0:
 				libKernels[id_actual_region].bestResult = result;
 				libKernels[id_actual_region].bestTime = time;
-				libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
+				libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
 				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
 				libKernels[id_actual_region].state = S1;
                                 printf("S0 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
@@ -196,7 +190,7 @@ void lib_end_parallel_region(){
 				if(result < libKernels[id_actual_region].bestResult){
 					libKernels[id_actual_region].bestResult = result;
 					libKernels[id_actual_region].bestTime = time;
-					libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
+					libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
 					if(libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores){
 						libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
 						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads*2;
@@ -214,7 +208,7 @@ void lib_end_parallel_region(){
 
 					}
 				}else{
-					if(libKernels[id_actual_region].bestThreadOn == libKernels[id_actual_region].numCores/2){
+					if(libKernels[id_actual_region].bestThread == libKernels[id_actual_region].numCores/2){
 							libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                                         libKernels[id_actual_region].timeTurboOn = time;
 							libKernels[id_actual_region].state = END_THREADS;
@@ -244,7 +238,7 @@ void lib_end_parallel_region(){
 						libKernels[id_actual_region].state = END_THREADS;
 					}
 				}else{
-					libKernels[id_actual_region].bestThreadOn = libKernels[id_actual_region].numThreads;
+					libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
 					libKernels[id_actual_region].bestTime = time;
 					libKernels[id_actual_region].bestResult = result;
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
@@ -310,9 +304,9 @@ void lib_destructor(){
         id_actual_region = MAX_KERNEL-1;
         float energy = lib_end_rapl_sysfs();
         float edp = time * energy;
-        printf("Poseidon - Execution Time: %.5f seconds\n", time);
-        printf("Poseidon - Energy: %.5f joules\n",energy);
-        printf("Poseidon - EDP: %.5f\n", edp);
+        printf("POSEIDON - Execution Time: %.5f seconds\n", time);
+        printf("POSEIDON - Energy: %.5f joules\n",energy);
+        printf("POSEIDON - EDP: %.5f\n", edp);
 }
 
 /* Function used by the Intel RAPL to detect the CPU Architecture*/

@@ -363,8 +363,8 @@ struct gomp_task_icv
   unsigned int thread_limit_var;
   bool dyn_var;
   bool nest_var;
-  int aurora_var;
-  int aurora_start_search;
+  int lib_var;
+  int lib_start_search;
   char bind_var;
   /* Internal ICV.  */
   struct target_mem_desc *target_data;

@@ -25,7 +25,7 @@
 #define MAX_PACKAGES            4 //16
 
 
-/*define AURORA environment*/
+/*define POSEIDON environment*/
 
 #define MAX_KERNEL              61
 #define MAX_THREADS             32
@@ -58,10 +58,10 @@ double write_file_threshold=0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int id_previous_region=-1;
-short int auroraMetric;
+short int metric;
 short int totalKernels=0;
-short int auroraTotalPackages=0;
-short int auroraTotalCores=0;
+short int libTotalPackages=0;
+short int libTotalCores=0;
 
 
 
@@ -70,19 +70,16 @@ typedef struct{
         short int numCores;
         short int bestThread;
         short int startThreads;
-        short int auroraMetric;
+        short int metric;
         short int state;
         int bestFreq;
         short int pass;
         short int lastThread;
-        short int idSeq;
-        short int idParAnt;
-        short int idParPos;
         double bestResult, bestTime, initResult, totalTime, totalEnergy;
 	double timeTurboOff, timeTurboOn;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];
 }typeFrame;
 
-typeFrame auroraKernels[MAX_KERNEL];
+typeFrame libKernels[MAX_KERNEL];
 
