@@ -131,6 +131,8 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 		return auroraKernels[id_actual_region].bestThreadOn;
 		break;
 	case END_THREADS:
+		aurora_start_amd_msr();
+		auroraKernels[id_actual_region].initResult = omp_get_wtime();
 		if (auroraKernels[id_actual_region].bestTime > write_file_threshold)
 		{
 			fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);

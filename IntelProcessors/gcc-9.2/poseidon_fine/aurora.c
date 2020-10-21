@@ -126,6 +126,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                		return libKernels[id_actual_region].bestThreadOn;
 			break;
 		case END_THREADS:
+                        lib_start_rapl_sysfs();
+                        libKernels[id_actual_region].initResult = omp_get_wtime();
 			if(libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
