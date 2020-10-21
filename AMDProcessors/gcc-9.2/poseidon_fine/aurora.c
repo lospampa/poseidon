@@ -133,8 +133,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region)
 		return libKernels[id_actual_region].bestThread;
 		break;
 	case END_THREADS:
-		lib_start_amd_msr();
-		libKernels[id_actual_region].initResult = omp_get_wtime();
 		if (libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].lastBestFreqSeq && libKernels[id_actual_region].bestTime > write_file_threshold)
 		{
 			libKernels[id_actual_region].lastBestFreq = libKernels[id_actual_region].bestFreq;
@@ -143,11 +141,11 @@ int lib_resolve_num_threads(uintptr_t ptr_region)
 			write(fd, set, sizeof(set));
 			close(fd);			
 		}
+		lib_start_amd_msr();
+		libKernels[id_actual_region].initResult = omp_get_wtime();
 		return libKernels[id_actual_region].bestThread;
 		break;
 	default:
-		lib_start_amd_msr();
-		libKernels[id_actual_region].initResult = omp_get_wtime();
 		if (libKernels[id_actual_region].bestFreq != libKernels[id_previous_region].lastBestFreqSeq && libKernels[id_actual_region].bestTime > write_file_threshold)
 		{
 			libKernels[id_actual_region].lastBestFreq = libKernels[id_actual_region].bestFreq;
@@ -156,6 +154,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region)
 			write(fd, set, sizeof(set));
 			close(fd);
 		}
+		lib_start_amd_msr();
+		libKernels[id_actual_region].initResult = omp_get_wtime();
 		return libKernels[id_actual_region].numThreads;
 	}
 }
