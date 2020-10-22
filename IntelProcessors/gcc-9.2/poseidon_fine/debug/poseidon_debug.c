@@ -61,7 +61,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         if(libKernels[id_previous_region].seqState == END_SEQUENTIAL){
 		time = omp_get_wtime() - initSeqTime;
                 libKernels[id_previous_region].totalTimeSeq += time;
-		energy = aurora_end_amd_msr();
+		energy = lib_end_rapl_sysfs();
 		libKernels[id_previous_region].totalEnergySeq += energy;
 	}
 
@@ -173,7 +173,7 @@ void lib_end_parallel_region(){
         if(libKernels[id_actual_region].state == END){
 		time = omp_get_wtime() - libKernels[id_actual_region].initResult;
                 libKernels[id_actual_region].totalTime += time;
-		energy = aurora_end_amd_msr();
+		energy = lib_end_rapl_sysfs();
 		libKernels[id_actual_region].totalEnergy += energy;
 	}
 
