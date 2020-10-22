@@ -32,6 +32,10 @@ void aurora_init(int metric, int start_search)
                 auroraKernels[i].bestFreqSeq = TURBO_OFF;
 		auroraKernels[i].timeTurboOff = 0.0;
 		auroraKernels[i].timeTurboOn = 0.0;
+		auroraKernels[i].totalTime = 0.0;
+		auroraKernels[i].totalEnergy = 0.0;
+		auroraKernels[i].totalTimeSeq = 0.0;
+		auroraKernels[i].totalEnergySeq = 0.0;
                 auroraKernels[i].seqState = PASS;
 		idKernels[i] = 0;
 	}
@@ -61,6 +65,13 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	double time=0, energy=0, result=0;
 	id_actual_region = -1;
 
+	if(auroraKernels[id_previous_region].seqState == END_SEQUENTIAL){
+		time = omp_get_wtime() - initSeqTime;
+                auroraKernels[id_previous_region].totalTimeSeq += time;
+		energy = aurora_end_amd_msr();
+		auroraKernels[id_previous_region].totalEnergySeq += energy;
+	}
+
 	
         
         if(auroraKernels[id_previous_region].seqState != END_SEQUENTIAL && auroraKernels[id_previous_region].seqState != PASS){
@@ -68,10 +79,13 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
                                 case PERFORMANCE:
                                         result = omp_get_wtime() - initSeqTime;
                                         time = result;
+					auroraKernels[id_previous_region].totalTimeSeq += time;
                                         break;
                                 case EDP:
                                         time = omp_get_wtime() - initSeqTime;
+					auroraKernels[id_previous_region].totalTimeSeq += time;
                                         energy = aurora_end_amd_msr();
+					auroraKernels[id_previous_region].totalEnergySeq += energy;
                                         result = time * energy;
                                         /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                         if(result == 0.00000 || result < 0){
@@ -124,6 +138,8 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
 	switch (auroraKernels[id_actual_region].state)
 	{
 	case END:
+		aurora_start_amd_msr();
+		auroraKernels[id_actual_region].initResult = omp_get_wtime();
                 if((auroraKernels[id_previous_region].bestFreqSeq == TURBO_OFF && auroraKernels[id_actual_region].bestFreq == TURBO_ON && (auroraKernels[id_actual_region].timeTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeTurboOff)) || (auroraKernels[id_previous_region].bestFreqSeq == TURBO_ON && auroraKernels[id_actual_region].bestFreq == TURBO_OFF && (auroraKernels[id_actual_region].timeTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeTurboOn))){
                         fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 			sprintf(set, "%d", auroraKernels[id_actual_region].bestFreq);
@@ -164,6 +180,15 @@ void aurora_end_parallel_region(){
         double time=0, energy=0, result=0;
 	int fd;
 	char set[2];
+
+	if(auroraKernels[id_actual_region].state == END){
+		time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
+                auroraKernels[id_actual_region].totalTime += time;
+		energy = aurora_end_amd_msr();
+		auroraKernels[id_actual_region].totalEnergy += energy;
+	}
+
+
         if(auroraKernels[id_actual_region].state !=END){
                 /* Check the auroraMetric that is being evaluated and collect the results */
                 switch(auroraKernels[id_actual_region].auroraMetric){
@@ -171,11 +196,14 @@ void aurora_end_parallel_region(){
 				//printf("case Performance\n");
                                 result = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
 				time = result;
+				auroraKernels[id_actual_region].totalTime += time;
                                 break;
                         case EDP:
 				//printf("case EDP\n");
                                 time = omp_get_wtime() - auroraKernels[id_actual_region].initResult;
+				auroraKernels[id_actual_region].totalTime += time;
                                 energy = aurora_end_amd_msr();
+				auroraKernels[id_actual_region].totalEnergy += energy;
                                 result = time * energy;
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the auroraMetric changes to performance */
                                 if(result == 0.00000 || result < 0){
@@ -301,6 +329,8 @@ void aurora_end_parallel_region(){
 				write(fd, set, sizeof(set));
 				close(fd);
                 	}
+			initSeqTime = omp_get_wtime();
+			aurora_start_amd_msr();
                         break;
 		
 	}
@@ -317,6 +347,11 @@ void aurora_destructor()
 	printf("Poseidon - Execution Time: %.5f seconds\n", time);
 	printf("Poseidon - Energy: %.5f joules\n", energy);
 	printf("Poseidon - EDP: %.5f\n", edp);
+
+	for(int i=0; i<totalKernels; i++){
+		printf("%d %d %d %lf %lf\n", i, auroraKernels[i].bestThreadOn, auroraKernels[i].bestFreq, auroraKernels[i].totalTime, auroraKernels[i].totalEnergy);
+		printf("%d %d %d %lf %lf\n", i+1, 1 , auroraKernels[i].bestFreqSeq, auroraKernels[i].totalTime, auroraKernels[i].totalEnergy);
+	}	
 }
 
 void aurora_detect_packages()
