@@ -73,6 +73,7 @@ double initGlobalTime = 0.0;
 double write_file_threshold=0.0;
 double initSeqTime;
 unsigned long int idKernels[MAX_KERNEL];
+short int boost_status=0;
 short int id_actual_region=0;
 short int id_previous_region=0;
 short int totalKernels=0;
@@ -81,7 +82,6 @@ typedef struct{
         short int numThreads;
         short int numCores;
         short int bestThread;
-        short int bestThreadOn;
 	short int startThreads;
         short int metric;
         short int seqMetric;
