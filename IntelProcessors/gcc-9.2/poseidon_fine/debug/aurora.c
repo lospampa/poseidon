@@ -124,9 +124,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                 write(fd, set, sizeof(set));
                                 close(fd);
                                 boost_status=libKernels[id_actual_region].bestFreq;
-                        } else {
-                                 printf("END - PARALLEL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeTurboOn, libKernels[id_actual_region].timeTurboOff, boost_status, libKernels[id_actual_region].bestFreq);
                         }
+                        printf("END - PARALLEL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeTurboOn, libKernels[id_actual_region].timeTurboOff, boost_status, libKernels[id_actual_region].bestFreq);
                		return libKernels[id_actual_region].bestThread;
 			break;
 		case END_THREADS:
@@ -137,10 +136,9 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
 				write(fd, set, sizeof(set));
 				close(fd);
-                                boost_status=libKernels[id_actual_region].bestFreq;
-			} else {
-                                printf("END_THREADS - PARALLEL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeTurboOn, libKernels[id_actual_region].timeTurboOff, boost_status, libKernels[id_actual_region].bestFreq);
+                                boost_status=libKernels[id_actual_region].bestFreq;       
                         }
+                        printf("END_THREADS - PARALLEL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeTurboOn, libKernels[id_actual_region].timeTurboOff, boost_status, libKernels[id_actual_region].bestFreq);
                		return libKernels[id_actual_region].bestThread;
 			break;
                 default:
@@ -152,9 +150,8 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 				write(fd, set, sizeof(set));
 				close(fd);
                                 boost_status=libKernels[id_actual_region].bestFreq;
-			} else {
-                                printf("DEFAULT - PARALLEL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeTurboOn, libKernels[id_actual_region].timeTurboOff, boost_status, libKernels[id_actual_region].bestFreq);
-                        }
+			} 
+                        printf("DEFAULT - PARALLEL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeTurboOn, libKernels[id_actual_region].timeTurboOff, boost_status, libKernels[id_actual_region].bestFreq);
                         return libKernels[id_actual_region].numThreads; 
         }      
 }
@@ -298,9 +295,8 @@ void lib_end_parallel_region(){
 	        		write(fd, set, sizeof(set));
 	        		close(fd);
                                 boost_status=libKernels[id_actual_region].bestFreqSeq;
-			} else {
-                                printf("END_TURBO - SEQUENTIAL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeSeqTurboOn, libKernels[id_actual_region].timeSeqTurboOff, boost_status, libKernels[id_actual_region].bestFreqSeq);
-                        }
+			} 
+                        printf("END_TURBO - SEQUENTIAL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeSeqTurboOn, libKernels[id_actual_region].timeSeqTurboOff, boost_status, libKernels[id_actual_region].bestFreqSeq);
 			initSeqTime = omp_get_wtime();
                         lib_start_rapl_sysfs();
 			break;
@@ -311,9 +307,8 @@ void lib_end_parallel_region(){
 				write(fd, set, sizeof(set));
 				close(fd);
                                 boost_status=libKernels[id_actual_region].bestFreqSeq;
-                	} else {
-                                printf("END_SEQUENTIAL - SEQUENTIAL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeSeqTurboOn, libKernels[id_actual_region].timeSeqTurboOff, boost_status, libKernels[id_actual_region].bestFreqSeq);
-                        }
+                	} 
+                        printf("END_SEQUENTIAL - SEQUENTIAL: ON: %lf ----- OFF: %lf ----- Boosting State: %d ----- actual_region_boosting: %d\n", libKernels[id_actual_region].timeSeqTurboOn, libKernels[id_actual_region].timeSeqTurboOff, boost_status, libKernels[id_actual_region].bestFreqSeq);             
                         break;
 	}
 	id_previous_region = id_actual_region;
