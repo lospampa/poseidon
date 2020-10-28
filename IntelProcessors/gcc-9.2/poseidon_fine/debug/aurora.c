@@ -349,8 +349,8 @@ void lib_destructor(){
 
         
         for(int i=0; i<totalKernels; i++){
-		printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThreadOn, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
-		printf("%d %d %d %lf %lf\n", i+1, 1 , libKernels[i].bestFreqSeq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+		printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThread, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+		printf("%d %d %d %lf %lf\n", i+1, 1 , libKernels[i].bestFreqSeq, libKernels[i].totalTimeSeq, libKernels[i].totalEnergySeq);
 	}
 }
 
