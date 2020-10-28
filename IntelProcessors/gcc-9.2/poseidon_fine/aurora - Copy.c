@@ -59,27 +59,16 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         double time=0, energy=0, result=0;
         id_actual_region = -1;
 
-
-        if(libKernels[id_previous_region].seqState == END_SEQUENTIAL){
-		time = omp_get_wtime() - initSeqTime;
-                libKernels[id_previous_region].totalTimeSeq += time;
-		energy = lib_end_rapl_sysfs();
-		libKernels[id_previous_region].totalEnergySeq += energy;
-	}
-
         
         if(libKernels[id_previous_region].seqState != END_SEQUENTIAL && libKernels[id_previous_region].seqState != PASS){
                 switch(libKernels[id_previous_region].seqMetric){
                                 case PERFORMANCE:
                                         result = omp_get_wtime() - initSeqTime;
                                         time = result;
-                                        libKernels[id_previous_region].totalTimeSeq += time;
                                         break;
                                 case EDP:
                                         time = omp_get_wtime() - initSeqTime;
-                                        libKernels[id_previous_region].totalTimeSeq += time;
                                         energy = lib_end_rapl_sysfs();
-                                        libKernels[id_previous_region].totalEnergySeq += energy;
                                         result = time * energy;
                                         /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                         if(result == 0.00000 || result < 0){
@@ -129,8 +118,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         /* Check the state of the search algorithm. */
         switch(libKernels[id_actual_region].state){
 	        case END:
-                        lib_start_rapl_sysfs();
-                        libKernels[id_actual_region].initResult = omp_get_wtime();
 			if((boost_status == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (boost_status == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
                                 fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
                                 sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
@@ -172,28 +159,16 @@ void lib_end_parallel_region(){
         double time=0, energy=0, result=0;
 	int fd;
 	char set[2];
-
-        if(libKernels[id_actual_region].state == END){
-	        time = omp_get_wtime() - libKernels[id_actual_region].initResult;
-                libKernels[id_actual_region].totalTime += time;
-		energy = lib_end_rapl_sysfs();
-		libKernels[id_actual_region].totalEnergy += energy;
-	}
-
-
         if(libKernels[id_actual_region].state !=END){
                 /* Check the metric that is being evaluated and collect the results */
                 switch(libKernels[id_actual_region].metric){
                         case PERFORMANCE:
                                 result = omp_get_wtime() - libKernels[id_actual_region].initResult;
 				time = result;
-                                libKernels[id_actual_region].totalTime += time;
                                 break;
                         case EDP:
                                 time = omp_get_wtime() - libKernels[id_actual_region].initResult;
-                                libKernels[id_actual_region].totalTime += time;
                                 energy = lib_end_rapl_sysfs();
-                                libKernels[id_actual_region].totalEnergy += energy;
                                 result = time * energy;
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.00000 || result < 0){
@@ -329,8 +304,6 @@ void lib_end_parallel_region(){
 				close(fd);
                                 boost_status=libKernels[id_actual_region].bestFreqSeq;
                 	}
-                        initSeqTime = omp_get_wtime();
-                        lib_start_rapl_sysfs();
                         break;
 	}
 	id_previous_region = id_actual_region;
