@@ -346,6 +346,12 @@ void lib_destructor(){
         printf("Poseidon - Execution Time: %.5f seconds\n", time);
         printf("Poseidon - Energy: %.5f joules\n",energy);
         printf("Poseidon - EDP: %.5f\n", edp);
+
+        
+        for(int i=0; i<totalKernels; i++){
+		printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThreadOn, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+		printf("%d %d %d %lf %lf\n", i+1, 1 , libKernels[i].bestFreqSeq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+	}
 }
 
 /* Function used by the Intel RAPL to detect the CPU Architecture*/
