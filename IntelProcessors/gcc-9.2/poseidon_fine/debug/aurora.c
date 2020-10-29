@@ -28,6 +28,10 @@ void lib_init(int metric, int start_search){
                 libKernels[i].seqMetric = metric;
 		libKernels[i].bestFreq = TURBO_ON;
                 libKernels[i].bestFreqSeq = TURBO_ON;
+                libKernels[i].totalTime = 0.0;
+                libKernels[i].totalTimeSeq = 0.0;
+                libKernels[i].totalEnergy = 0.0;
+                libKernels[i].totalEnergySeq = 0.0;
                 libKernels[i].timeTurboOff = 0.0;
                 libKernels[i].timeTurboOn = 0.0;
                 libKernels[i].seqState = PASS;
