@@ -46,7 +46,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region){
 	double result=0, time=0, energy=0;
 	
 	//matheus, para tirar dado de tempo e energia, descomentar abaixo.
-	if(auoraKernels[id_previous_region].state = EDP){
+	if(auoraKernels[id_previous_region].state = END){
 		auroraKernels[id_previous_region].totalTime += omp_get_wtime() - auroraKernels[id_previous_region].initResult;
 		energy = aurora_end_amd_msr();
 		auroraKernels[id_previous_region].totalEnergy += energy;		
