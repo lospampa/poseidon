@@ -12,15 +12,15 @@ void lib_init(int metric, int start_search){
         lib_detect_packages();
         /*End initialization of RAPL */
 
-        int startThreads = numCores;
-	while(startThreads != 2 && startThreads != 3 && startThreads != 5){
-	       startThreads = startThreads/2;
-	}
+        //int startThreads = numCores;
+	//while(startThreads != 2 && startThreads != 3 && startThreads != 5){
+	//       startThreads = startThreads/2;
+	//}
 
         /* Initialization of the variables necessary to perform the search algorithm */
         for(i=0;i<MAX_KERNEL;i++){
                 libKernels[i].numThreads = numCores;
-                libKernels[i].startThreads = startThreads;
+                libKernels[i].startThreads = 2;//startThreads;
                 libKernels[i].numCores = numCores;
                 libKernels[i].initResult = 0.0;
                 libKernels[i].state = REPEAT;
@@ -179,13 +179,13 @@ void lib_end_parallel_region(){
                 }
                 switch(libKernels[id_actual_region].state){
 			case REPEAT:
-                                printf("REPEAT - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                                printf("REPEAT - Região %d, Turbo State %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
 				libKernels[id_actual_region].state = S0;
 				libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
 				libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads; 
 				break;
 			case S0:
-                                printf("S0 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                                printf("S0 - Região %d, Turbo State %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
 				libKernels[id_actual_region].bestResult = result;
 				libKernels[id_actual_region].bestTime = time;
 				libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
@@ -193,7 +193,7 @@ void lib_end_parallel_region(){
 				libKernels[id_actual_region].state = S1;
 				break;
 			case S1:
-                                printf("S1 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                                printf("S1 - Região %d, Turbo State %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
 				if(result < libKernels[id_actual_region].bestResult){
 					libKernels[id_actual_region].bestResult = result;
 					libKernels[id_actual_region].bestTime = time;
@@ -233,7 +233,7 @@ void lib_end_parallel_region(){
 				}
 				break;
 			case S2:
-                                printf("S2 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                                printf("S2 - Região %d, Turbo State %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
 				if(libKernels[id_actual_region].bestResult < result){
 					libKernels[id_actual_region].pass = libKernels[id_actual_region].pass/2;
 					if(libKernels[id_actual_region].pass >= 2){
@@ -259,7 +259,7 @@ void lib_end_parallel_region(){
 				}
 				break;
 			case END_THREADS:
-                                printf("END_THREADS - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                                printf("END_THREADS - Região %d, Turbo State %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
 				libKernels[id_actual_region].state = END;
                                 libKernels[id_actual_region].timeTurboOff = time;
 				if(libKernels[id_actual_region].bestResult < result)
@@ -287,7 +287,7 @@ void lib_end_parallel_region(){
                         lib_start_rapl_sysfs();
                         break;
 		case END_TURBO:
-                        printf("SEQUENTIAL - END_TURBO - Região %d, Resultado TURBO_ON %lf\n", id_actual_region, libKernels[id_actual_region].resultSeqTurboOn);
+                        printf("SEQUENTIAL - END_TURBO - Região %d, Turbo State %d, Resultado TURBO_ON %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].resultSeqTurboOn);
 			if (boost_status != libKernels[id_actual_region].bestFreqSeq && write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn){
                 		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         			sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
@@ -299,7 +299,7 @@ void lib_end_parallel_region(){
                         lib_start_rapl_sysfs();
 			break;
 		case END_SEQUENTIAL:
-                        printf("SEQUENTIAL - END_SEQUENTIAL - Região %d, Resultado TURBO_OFF %lf, Resultado TURBO_ON %lf\n", id_actual_region, libKernels[id_actual_region].resultSeqTurboOff, libKernels[id_actual_region].resultSeqTurboOn);
+                        printf("SEQUENTIAL - END_SEQUENTIAL - Região %d, Turbo State %d, Resultado TURBO_OFF %lf, Resultado TURBO_ON %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].resultSeqTurboOff, libKernels[id_actual_region].resultSeqTurboOn);
 			if((boost_status == TURBO_OFF && libKernels[id_actual_region].bestFreqSeq == TURBO_ON && (libKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOff)) || (boost_status == TURBO_ON && libKernels[id_actual_region].bestFreqSeq == TURBO_OFF && (libKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn))){
                         	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 				sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
