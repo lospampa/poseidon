@@ -72,7 +72,7 @@ int aurora_resolve_num_threads(uintptr_t ptr_region)
                                         break;
                                 case EDP:
                                         time = omp_get_wtime() - initSeqTime;
-                                        energy = aurora_end_amd_msr();
+                                        energy = aurora_end_seq_amd_msr();
                                         result = time * energy;
                                         /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                         if(result == 0.00000 || result < 0){
@@ -286,7 +286,7 @@ void aurora_end_parallel_region(){
 	        	//	close(fd);
 			//}
 			initSeqTime = omp_get_wtime();
-			aurora_start_amd_msr();
+			aurora_start_seq_amd_msr();
 			break;
 		case END_TURBO:
 			if (auroraKernels[id_actual_region].bestFreq != auroraKernels[id_actual_region].bestFreqSeq && write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff){
@@ -297,7 +297,7 @@ void aurora_end_parallel_region(){
 				boost_status=auroraKernels[id_actual_region].bestFreqSeq;
 			}
 			initSeqTime = omp_get_wtime();
-			aurora_start_amd_msr();
+			aurora_start_seq_amd_msr();
 			break;
 		case END_SEQUENTIAL:
 			if((boost_status == TURBO_OFF && auroraKernels[id_actual_region].bestFreqSeq == TURBO_ON && (auroraKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOff)) || (boost_status == TURBO_ON && auroraKernels[id_actual_region].bestFreqSeq == TURBO_OFF && (auroraKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < auroraKernels[id_actual_region].timeSeqTurboOn))){
@@ -320,9 +320,9 @@ void aurora_destructor()
 	id_actual_region = MAX_KERNEL - 1;
 	double energy = aurora_end_amd_msr();
         float edp = time * energy;
-	printf("Poseidon - Execution Time: %.5f seconds\n", time);
-	printf("Poseidon - Energy: %.5f joules\n", energy);
-	printf("Poseidon - EDP: %.5f\n", edp);
+	printf("POSEIDON - Execution Time: %.5f seconds\n", time);
+	printf("POSEIDON - Energy: %.5f joules\n", energy);
+	printf("POSEIDON - EDP: %.5f\n", edp);
 }
 
 void aurora_detect_packages()
@@ -397,5 +397,52 @@ double aurora_end_amd_msr()
 	pread(fd, &data, sizeof data, AMD_MSR_PACKAGE_ENERGY);
 	auroraKernels[id_actual_region].kernelAfter[0] = (long long)data;
 	double result = (auroraKernels[id_actual_region].kernelAfter[0] - auroraKernels[id_actual_region].kernelBefore[0]) * pow(0.5, (float)(energy_unit));
+	return result;
+}
+
+void aurora_start_seq_amd_msr()
+{
+	char msr_filename[STRING_BUFFER];
+	int fd;
+	sprintf(msr_filename, "/dev/cpu/0/msr");
+	fd = open(msr_filename, O_RDONLY);
+	if (fd < 0)
+	{
+		if (errno == ENXIO)
+		{
+			fprintf(stderr, "rdmsr: No CPU 0\n");
+			exit(2);
+		}
+		else if (errno == EIO)
+		{
+			fprintf(stderr, "rdmsr: CPU 0 doesn't support MSRs\n");
+			exit(3);
+		}
+		else
+		{
+			perror("rdmsr:open");
+			fprintf(stderr, "Trying to open %s\n", msr_filename);
+			exit(127);
+		}
+	}
+	uint64_t data;
+	pread(fd, &data, sizeof data, AMD_MSR_PACKAGE_ENERGY);
+	//auroraKernels[id_actual_region].kernelBefore[0] = read_msr(fd, AMD_MSR_PACKAGE_ENERGY);
+	auroraKernels[id_actual_region].kernelBeforeSeq[0] = (long long)data;
+}
+
+double aurora_end_seq_amd_msr()
+{
+	char msr_filename[STRING_BUFFER];
+	int fd;
+	sprintf(msr_filename, "/dev/cpu/0/msr");
+	fd = open(msr_filename, O_RDONLY);
+	uint64_t data;
+	pread(fd, &data, sizeof data, AMD_MSR_PWR_UNIT);
+	int core_energy_units = (long long)data;
+	unsigned int energy_unit = (core_energy_units & AMD_ENERGY_UNIT_MASK) >> 8;
+	pread(fd, &data, sizeof data, AMD_MSR_PACKAGE_ENERGY);
+	auroraKernels[id_previous_region].kernelAfterSeq[0] = (long long)data;
+	double result = (auroraKernels[id_previous_region].kernelAfterSeq[0] - auroraKernels[id_previous_region].kernelBeforeSeq[0]) * pow(0.5, (float)(energy_unit));
 	return result;
 }

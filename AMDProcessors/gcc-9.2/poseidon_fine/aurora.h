@@ -63,7 +63,7 @@ char packname[MAX_PACKAGES][256];
 char tempfile[256];
 double initGlobalTime = 0.0;
 double write_file_threshold=0.0;
-double initSeqTime;
+double initSeqTime=0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int id_previous_region=0;
@@ -96,6 +96,8 @@ typedef struct{
 	double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff, resultSeqTurboOn, resultSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES];
         long long kernelAfter[MAX_PACKAGES];
+        long long kernelBeforeSeq[MAX_PACKAGES];
+        long long kernelAfterSeq[MAX_PACKAGES];
 }typeFrame;
 
 typeFrame auroraKernels[MAX_KERNEL];

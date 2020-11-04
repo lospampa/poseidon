@@ -40,6 +40,8 @@ void aurora_destructor(void);
 void aurora_detect_packages(void);
 void aurora_start_amd_msr(void);
 double aurora_end_amd_msr(void);
+void aurora_start_seq_amd_msr(void);
+double aurora_end_seq_amd_msr(void);
 void aurora_init_variables(int auroraMetric);
 int aurora_find_id_kernel(uintptr_t ptr_region);
 int aurora_resolve_num_threads(uintptr_t ptr_region);
