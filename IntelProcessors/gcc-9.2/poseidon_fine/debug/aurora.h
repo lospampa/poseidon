@@ -72,14 +72,6 @@ char packname[MAX_PACKAGES][256];
 char tempfile[256];
 int valid[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 
-
-/*RAPL VARIABLES SEQUENTIAL*/
-char event_names_seq[MAX_PACKAGES][NUM_RAPL_DOMAINS][256];
-char filenames_seq[MAX_PACKAGES][NUM_RAPL_DOMAINS][256];
-char packname_seq[MAX_PACKAGES][256];
-char tempfile_seq[256];
-int valid_seq[MAX_PACKAGES][NUM_RAPL_DOMAINS];
-
 /*SEACH VARIABLES*/
 double initGlobalTime = 0.0;
 double write_file_threshold=0.0;

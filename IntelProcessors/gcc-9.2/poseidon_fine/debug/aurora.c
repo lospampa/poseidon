@@ -510,40 +510,40 @@ void lib_start_seq_rapl_sysfs(){
         FILE *fff;
         for(j=0;j<total_packages;j++) {
                 i=0;
-                sprintf(packname_seq[j],"/sys/class/powercap/intel-rapl/intel-rapl:%d",j);
-                sprintf(tempfile_seq,"%s/name",packname_seq[j]);
-                fff=fopen(tempfile_seq,"r");
+                sprintf(packname[j],"/sys/class/powercap/intel-rapl/intel-rapl:%d",j);
+                sprintf(tempfile,"%s/name",packname[j]);
+                fff=fopen(tempfile,"r");
                 if (fff==NULL) {
-                        fprintf(stderr,"\tCould not open %s\n",tempfile_seq);
+                        fprintf(stderr,"\tCould not open %s\n",tempfile);
                         exit(0);
                 }
-                fscanf(fff,"%s",event_names_seq[j][i]);
-                valid_seq[j][i]=1;
+                fscanf(fff,"%s",event_names[j][i]);
+                valid[j][i]=1;
                 fclose(fff);
-                sprintf(filenames_seq[j][i],"%s/energy_uj",packname_seq[j]);
+                sprintf(filesnames[j][i],"%s/energy_uj",packname[j]);
 
                 /* Handle subdomains */
                 for(i=1;i<NUM_RAPL_DOMAINS;i++){
-                        sprintf(tempfile_seq,"%s/intel-rapl:%d:%d/name", packname_seq[j],j,i-1);
-                        fff=fopen(tempfile_seq,"r");
+                        sprintf(tempfile,"%s/intel-rapl:%d:%d/name", packname[j],j,i-1);
+                        fff=fopen(tempfile,"r");
                         if (fff==NULL) {
                                 //fprintf(stderr,"\tCould not open %s\n",tempfile);
-                                valid_seq[j][i]=0;
+                                valid[j][i]=0;
                                 continue;
                         }
-                        valid_seq[j][i]=1;
-                        fscanf(fff,"%s",event_names_seq[j][i]);
+                        valid[j][i]=1;
+                        fscanf(fff,"%s",event_names[j][i]);
                         fclose(fff);
-                        sprintf(filenames_seq[j][i],"%s/intel-rapl:%d:%d/energy_uj", packname_seq[j],j,i-1);
+                        sprintf(filesnames[j][i],"%s/intel-rapl:%d:%d/energy_uj", packname[j],j,i-1);
                 }
         }
  /* Gather before values */
         for(j=0;j<total_packages;j++) {
                 for(i=0;i<NUM_RAPL_DOMAINS;i++) {
-                        if(valid_seq[j][i]) {
-                                fff=fopen(filenames_seq[j][i],"r");
+                        if(valid[j][i]) {
+                                fff=fopen(filesnames[j][i],"r");
                                 if (fff==NULL) {
-                                        fprintf(stderr,"\tError opening %s!\n",filenames_seq[j][i]);
+                                        fprintf(stderr,"\tError opening %s!\n",filesnames[j][i]);
                                 }
                                 else {
                                         fscanf(fff,"%lld",&libKernels[id_actual_region].kernelBeforeSeq[j][i]);
@@ -564,10 +564,10 @@ double lib_end_seq_rapl_sysfs(){
         double total=0;
         for(j=0;j<total_packages;j++) {
                 for(i=0;i<NUM_RAPL_DOMAINS;i++) {
-                        if (valid_seq[j][i]) {
-                                fff=fopen(filenames_seq[j][i],"r");
+                        if (valid[j][i]) {
+                                fff=fopen(filesnames[j][i],"r");
                         if (fff==NULL) {
-                                fprintf(stderr,"\tError opening %s!\n",filenames_seq[j][i]);
+                                fprintf(stderr,"\tError opening %s!\n",filesnames[j][i]);
                         }
                         else {
                                 fscanf(fff,"%lld",&libKernels[id_previous_region].kernelAfterSeq[j][i]);
@@ -578,8 +578,8 @@ double lib_end_seq_rapl_sysfs(){
         }
         for(j=0;j<total_packages;j++) {
                 for(i=0;i<NUM_RAPL_DOMAINS;i++) {
-                        if(valid_seq[j][i]){
-                                if(strcmp(event_names_seq[j][i],"core")!=0 && strcmp(event_names_seq[j][i],"uncore")!=0){
+                        if(valid[j][i]){
+                                if(strcmp(event_names[j][i],"core")!=0 && strcmp(event_names[j][i],"uncore")!=0){
                                         total += (((double)libKernels[id_previous_region].kernelAfterSeq[j][i]-(double)libKernels[id_previous_region].kernelBeforeSeq[j][i])/1000000.0);
                                 }
                         }

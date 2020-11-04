@@ -42,6 +42,8 @@ void lib_detect_packages(void);
 void lib_detect_cpu(void);
 void lib_start_rapl_sysfs(void);
 double lib_end_rapl_sysfs(void);
+void lib_start_seq_rapl_sysfs(void);
+double lib_end_seq_rapl_sysfs(void);
 void lib_init_variables(int auroraMetric);
 int lib_find_id_kernel(uintptr_t ptr_region);
 int lib_resolve_num_threads(uintptr_t ptr_region);

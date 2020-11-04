@@ -95,6 +95,8 @@ typedef struct{
         double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff, resultSeqTurboOn, resultSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
+        long long kernelBeforeSeq[MAX_PACKAGES][NUM_RAPL_DOMAINS];
+        long long kernelAfterSeq[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
 
 typeFrame libKernels[MAX_KERNEL];
