@@ -67,7 +67,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
         if(libKernels[id_previous_region].seqState == END_SEQUENTIAL){
 		time = omp_get_wtime() - initSeqTime;
                 libKernels[id_previous_region].totalTimeSeq += time;
-		energy = lib_end_rapl_sysfs();
+		energy = lib_end_seq_rapl_sysfs();
 		libKernels[id_previous_region].totalEnergySeq += energy;
                 printf("Região SEQUENCIAL %d - Energy: %lf\n", id_previous_region, energy);
 	}
@@ -83,7 +83,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                 case EDP:
                                         time = omp_get_wtime() - initSeqTime;
                                         libKernels[id_previous_region].totalTimeSeq += time;
-                                        energy = lib_end_rapl_sysfs();
+                                        energy = lib_end_seq_rapl_sysfs();
                                         libKernels[id_previous_region].totalEnergySeq += energy;
                                         result = time * energy;
                                         /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
@@ -320,7 +320,7 @@ void lib_end_parallel_region(){
                         //      boost_status=libKernels[id_actual_region].bestFreqSeq;
 			//}
 			initSeqTime = omp_get_wtime();
-                        lib_start_rapl_sysfs();
+                        lib_start_seq_rapl_sysfs();
                         printf("PASS - Iniciou contador da SEQUENCIAL %d\n", id_actual_region);
                         break;
 		case END_TURBO:
@@ -332,7 +332,7 @@ void lib_end_parallel_region(){
                                 boost_status=libKernels[id_actual_region].bestFreqSeq;
 			}
 			initSeqTime = omp_get_wtime();
-                        lib_start_rapl_sysfs();
+                        lib_start_seq_rapl_sysfs();
                         printf("END_TURBO - Iniciou contador da SEQUENCIAL %d\n", id_actual_region);
 			break;
 		case END_SEQUENTIAL:
@@ -344,7 +344,7 @@ void lib_end_parallel_region(){
                                 boost_status=libKernels[id_actual_region].bestFreqSeq;
                 	}
                         initSeqTime = omp_get_wtime();
-                        lib_start_rapl_sysfs();
+                        lib_start_seq_rapl_sysfs();
                         printf("END_SEQUENTIAL - Iniciou contador da SEQUENCIAL %d\n", id_actual_region);
                         break;
 	}
@@ -358,9 +358,9 @@ void lib_destructor(){
         id_actual_region = MAX_KERNEL-1;
         float energy = lib_end_rapl_sysfs();
         float edp = time * energy;
-        printf("Poseidon - Execution Time: %.5f seconds\n", time);
-        printf("Poseidon - Energy: %.5f joules\n",energy);
-        printf("Poseidon - EDP: %.5f\n", edp);
+        printf("POSEIDON - Execution Time: %.5f seconds\n", time);
+        printf("POSEIDON - Energy: %.5f joules\n",energy);
+        printf("POSEIDON - EDP: %.5f\n", edp);
 
         
         for(int i=0; i<totalKernels; i++){
@@ -502,3 +502,89 @@ double lib_end_rapl_sysfs(){
         }
         return total;
 }
+
+
+
+void lib_start_seq_rapl_sysfs(){
+        int i,j;
+        FILE *fff;
+        for(j=0;j<total_packages;j++) {
+                i=0;
+                sprintf(packname[j],"/sys/class/powercap/intel-rapl/intel-rapl:%d",j);
+                sprintf(tempfile,"%s/name",packname[j]);
+                fff=fopen(tempfile,"r");
+                if (fff==NULL) {
+                        fprintf(stderr,"\tCould not open %s\n",tempfile);
+                        exit(0);
+                }
+                fscanf(fff,"%s",event_names[j][i]);
+                valid[j][i]=1;
+                fclose(fff);
+                sprintf(filenames[j][i],"%s/energy_uj",packname[j]);
+
+                /* Handle subdomains */
+                for(i=1;i<NUM_RAPL_DOMAINS;i++){
+                        sprintf(tempfile,"%s/intel-rapl:%d:%d/name", packname[j],j,i-1);
+                        fff=fopen(tempfile,"r");
+                        if (fff==NULL) {
+                                //fprintf(stderr,"\tCould not open %s\n",tempfile);
+                                valid[j][i]=0;
+                                continue;
+                        }
+                        valid[j][i]=1;
+                        fscanf(fff,"%s",event_names[j][i]);
+                        fclose(fff);
+                        sprintf(filenames[j][i],"%s/intel-rapl:%d:%d/energy_uj", packname[j],j,i-1);
+                }
+        }
+ /* Gather before values */
+        for(j=0;j<total_packages;j++) {
+                for(i=0;i<NUM_RAPL_DOMAINS;i++) {
+                        if(valid[j][i]) {
+                                fff=fopen(filenames[j][i],"r");
+                                if (fff==NULL) {
+                                        fprintf(stderr,"\tError opening %s!\n",filenames[j][i]);
+                                }
+                                else {
+                                        fscanf(fff,"%lld",&libKernels[id_actual_region].kernelBeforeSeq[j][i]);
+                                        fclose(fff);
+                                }
+                        }
+                }
+        }
+}
+
+
+
+
+
+double lib_end_seq_rapl_sysfs(){
+        int i, j;
+        FILE *fff;
+        double total=0;
+        for(j=0;j<total_packages;j++) {
+                for(i=0;i<NUM_RAPL_DOMAINS;i++) {
+                        if (valid[j][i]) {
+                                fff=fopen(filenames[j][i],"r");
+                        if (fff==NULL) {
+                                fprintf(stderr,"\tError opening %s!\n",filenames[j][i]);
+                        }
+                        else {
+                                fscanf(fff,"%lld",&libKernels[id_actual_region].kernelAfterSeq[j][i]);
+                                fclose(fff);
+                        }
+                }
+                }
+        }
+        for(j=0;j<total_packages;j++) {
+                for(i=0;i<NUM_RAPL_DOMAINS;i++) {
+                        if(valid[j][i]){
+                                if(strcmp(event_names[j][i],"core")!=0 && strcmp(event_names[j][i],"uncore")!=0){
+                                        total += (((double)libKernels[id_actual_region].kernelAfterSeq[j][i]-(double)libKernels[id_actual_region].kernelBeforeSeq[j][i])/1000000.0);
+                                }
+                        }
+                }
+        }
+        return total;
+}
+

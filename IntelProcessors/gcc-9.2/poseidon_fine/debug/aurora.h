@@ -71,7 +71,7 @@ char tempfile[256];
 int valid[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 double initGlobalTime = 0.0;
 double write_file_threshold=0.0;
-double initSeqTime;
+double initSeqTime=0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int boost_status=0;
 short int id_actual_region=0;
@@ -95,6 +95,8 @@ typedef struct{
         double timeTurboOff, timeTurboOn, timeSeqTurboOn, timeSeqTurboOff, resultSeqTurboOn, resultSeqTurboOff;
         long long kernelBefore[MAX_PACKAGES][NUM_RAPL_DOMAINS];
         long long kernelAfter[MAX_PACKAGES][NUM_RAPL_DOMAINS];
+        long long kernelBeforeSeq[MAX_PACKAGES][NUM_RAPL_DOMAINS];
+        long long kernelAfterSeq[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 }typeFrame;
 
 typeFrame libKernels[MAX_KERNEL];
