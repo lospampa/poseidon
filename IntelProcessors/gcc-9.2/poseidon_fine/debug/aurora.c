@@ -69,7 +69,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                 libKernels[id_previous_region].totalTimeSeq += time;
 		energy = lib_end_rapl_sysfs();
 		libKernels[id_previous_region].totalEnergySeq += energy;
-                printf("Região SEQUENCIAL %d - Energy: %lf", id_previous_region, energy);
+                printf("Região SEQUENCIAL %d - Energy: %lf\n", id_previous_region, energy);
 	}
 
         
@@ -112,7 +112,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
                                 }
                                 break;
                 }
-               printf("Região SEQUENCIAL %d - Energy: %lf", id_previous_region, energy);
+               printf("Região SEQUENCIAL %d - Energy: %lf\n", id_previous_region, energy);
         }
 
 
@@ -137,7 +137,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	        case END:
                         lib_start_rapl_sysfs();
                         libKernels[id_actual_region].initResult = omp_get_wtime();
-                        printf("END - Iniciou contador da PARALELA %d", id_actual_region);
+                        printf("END - Iniciou contador da PARALELA %d\n", id_actual_region);
 			if((boost_status == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (boost_status == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
                                 fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
                                 sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
@@ -149,7 +149,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			break;
 		case END_THREADS:
                         lib_start_rapl_sysfs();
-                        printf("END_THREADS - Iniciou contador da PARALELA %d", id_actual_region);
+                        printf("END_THREADS - Iniciou contador da PARALELA %d\n", id_actual_region);
                         libKernels[id_actual_region].initResult = omp_get_wtime();
 			if(boost_status != libKernels[id_actual_region].bestFreq && libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
@@ -162,7 +162,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			break;
                 default:
                         lib_start_rapl_sysfs();
-                        printf("DEFAULT - Iniciou contador da PARALELA %d", id_actual_region);
+                        printf("DEFAULT - Iniciou contador da PARALELA %d\n", id_actual_region);
                         libKernels[id_actual_region].initResult = omp_get_wtime();
 			if(boost_status != libKernels[id_actual_region].bestFreq && libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
@@ -302,7 +302,7 @@ void lib_end_parallel_region(){
 		}
 	 
         }
-        printf("Região PARALELA %d - Energy: %lf", id_actual_region, energy);
+        printf("Região PARALELA %d - Energy: %lf\n", id_actual_region, energy);
 
         switch(libKernels[id_actual_region].seqState){
                 case PASS:
@@ -319,7 +319,7 @@ void lib_end_parallel_region(){
 			//}
 			initSeqTime = omp_get_wtime();
                         lib_start_rapl_sysfs();
-                        printf("PASS - Iniciou contador da SEQUENCIAL %d", id_actual_region);
+                        printf("PASS - Iniciou contador da SEQUENCIAL %d\n", id_actual_region);
                         break;
 		case END_TURBO:
 			if (boost_status != libKernels[id_actual_region].bestFreqSeq && write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn){
@@ -331,7 +331,7 @@ void lib_end_parallel_region(){
 			}
 			initSeqTime = omp_get_wtime();
                         lib_start_rapl_sysfs();
-                        printf("END_TURBO - Iniciou contador da SEQUENCIAL %d", id_actual_region);
+                        printf("END_TURBO - Iniciou contador da SEQUENCIAL %d\n", id_actual_region);
 			break;
 		case END_SEQUENTIAL:
 			if((boost_status == TURBO_OFF && libKernels[id_actual_region].bestFreqSeq == TURBO_ON && (libKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOff)) || (boost_status == TURBO_ON && libKernels[id_actual_region].bestFreqSeq == TURBO_OFF && (libKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn))){
@@ -343,7 +343,7 @@ void lib_end_parallel_region(){
                 	}
                         initSeqTime = omp_get_wtime();
                         lib_start_rapl_sysfs();
-                        printf("END_SEQUENTIAL - Iniciou contador da SEQUENCIAL %d", id_actual_region);
+                        printf("END_SEQUENTIAL - Iniciou contador da SEQUENCIAL %d\n", id_actual_region);
                         break;
 	}
 	id_previous_region = id_actual_region;
