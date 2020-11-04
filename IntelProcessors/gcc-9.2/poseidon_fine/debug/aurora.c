@@ -187,6 +187,7 @@ void lib_end_parallel_region(){
                 libKernels[id_actual_region].totalTime += time;
 		energy = lib_end_rapl_sysfs();
 		libKernels[id_actual_region].totalEnergy += energy;
+                printf("Região PARALELA %d - Energy: %lf\n", id_actual_region, energy);
 	}
 
 
@@ -203,6 +204,7 @@ void lib_end_parallel_region(){
                                 libKernels[id_actual_region].totalTime += time;
                                 energy = lib_end_rapl_sysfs();
                                 libKernels[id_actual_region].totalEnergy += energy;
+                                printf("Região PARALELA %d - Energy: %lf\n", id_actual_region, energy);
                                 result = time * energy;
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.00000 || result < 0){
@@ -302,7 +304,7 @@ void lib_end_parallel_region(){
 		}
 	 
         }
-        printf("Região PARALELA %d - Energy: %lf\n", id_actual_region, energy);
+        
 
         switch(libKernels[id_actual_region].seqState){
                 case PASS:
