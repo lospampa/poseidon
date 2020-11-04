@@ -287,8 +287,6 @@ void lib_end_parallel_region(){
                         lib_start_rapl_sysfs();
                         break;
 		case END_TURBO:
-                        printf("SEQUENTIAL - END_TURBO - Região %d, Turbo State %d, Resultado TURBO_ON %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].resultSeqTurboOn);
-			if (boost_status != libKernels[id_actual_region].bestFreqSeq && write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn){
                 		fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
         			sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
 	        		write(fd, set, sizeof(set));
@@ -299,7 +297,7 @@ void lib_end_parallel_region(){
                         lib_start_rapl_sysfs();
 			break;
 		case END_SEQUENTIAL:
-                        printf("SEQUENTIAL - END_SEQUENTIAL - Região %d, Turbo State %d, Resultado TURBO_OFF %lf, Resultado TURBO_ON %lf\n", id_actual_region, boost_status, libKernels[id_actual_region].resultSeqTurboOff, libKernels[id_actual_region].resultSeqTurboOn);
+                        printf("SEQUENTIAL - END_SEQUENTIAL - Região %d, Turbo State %d, Resultado TURBO_OFF %lf, Resultado TURBO_ON %lf\n", id_actual_region, libKernels[id_actual_region].resultSeqTurboOff, libKernels[id_actual_region].resultSeqTurboOn);
 			if((boost_status == TURBO_OFF && libKernels[id_actual_region].bestFreqSeq == TURBO_ON && (libKernels[id_actual_region].timeSeqTurboOn + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOff)) || (boost_status == TURBO_ON && libKernels[id_actual_region].bestFreqSeq == TURBO_OFF && (libKernels[id_actual_region].timeSeqTurboOff + write_file_threshold < libKernels[id_actual_region].timeSeqTurboOn))){
                         	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
 				sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
