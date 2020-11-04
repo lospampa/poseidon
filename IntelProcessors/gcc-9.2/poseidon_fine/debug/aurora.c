@@ -570,7 +570,7 @@ double lib_end_seq_rapl_sysfs(){
                                 fprintf(stderr,"\tError opening %s!\n",filenames_seq[j][i]);
                         }
                         else {
-                                fscanf(fff,"%lld",&libKernels[id_actual_region].kernelAfterSeq[j][i]);
+                                fscanf(fff,"%lld",&libKernels[id_previous_region].kernelAfterSeq[j][i]);
                                 fclose(fff);
                         }
                 }
@@ -580,7 +580,7 @@ double lib_end_seq_rapl_sysfs(){
                 for(i=0;i<NUM_RAPL_DOMAINS;i++) {
                         if(valid_seq[j][i]){
                                 if(strcmp(event_names_seq[j][i],"core")!=0 && strcmp(event_names_seq[j][i],"uncore")!=0){
-                                        total += (((double)libKernels[id_actual_region].kernelAfterSeq[j][i]-(double)libKernels[id_actual_region].kernelBeforeSeq[j][i])/1000000.0);
+                                        total += (((double)libKernels[id_previous_region].kernelAfterSeq[j][i]-(double)libKernels[id_previous_region].kernelBeforeSeq[j][i])/1000000.0);
                                 }
                         }
                 }
