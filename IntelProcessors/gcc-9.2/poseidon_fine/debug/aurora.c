@@ -346,8 +346,15 @@ void lib_destructor(){
         printf("POSEIDON - EDP: %.5f\n", edp);
 
         for(int i=0; i<totalKernels; i++){
-		printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThread, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
-		printf("%d %d %d %lf %lf\n", i+1, 1 , libKernels[i].bestFreqSeq, libKernels[i].totalTimeSeq, libKernels[i].totalEnergySeq);
+		if(libKernels[i].bestThread != 0) {
+                        printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThread, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+                } else {
+                        printf("%d %d %d %lf %lf\n", i, libKernels[i].numThreads, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+                }
+                printf("%d %d %d %lf %lf\n", i+1, 1 , libKernels[i].bestFreqSeq, libKernels[i].totalTimeSeq, libKernels[i].totalEnergySeq);
+                
+                
+		
 	}
 }
 
