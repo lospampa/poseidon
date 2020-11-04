@@ -130,7 +130,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 	        case END:
                         lib_start_rapl_sysfs();
                         libKernels[id_actual_region].initResult = omp_get_wtime();
-                        printf("END - Iniciou contador da PARALELA %d\n", id_actual_region);
 			if((boost_status == TURBO_OFF && libKernels[id_actual_region].bestFreq == TURBO_ON && (libKernels[id_actual_region].timeTurboOn + write_file_threshold < libKernels[id_actual_region].timeTurboOff)) || (boost_status == TURBO_ON && libKernels[id_actual_region].bestFreq == TURBO_OFF && (libKernels[id_actual_region].timeTurboOff + write_file_threshold < libKernels[id_actual_region].timeTurboOn))){
                                 fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
                                 sprintf(set, "%d", libKernels[id_actual_region].bestFreq);
@@ -142,7 +141,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			break;
 		case END_THREADS:
                         lib_start_rapl_sysfs();
-                        printf("END_THREADS - Iniciou contador da PARALELA %d\n", id_actual_region);
                         libKernels[id_actual_region].initResult = omp_get_wtime();
 			if(boost_status != libKernels[id_actual_region].bestFreq && libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
@@ -155,7 +153,6 @@ int lib_resolve_num_threads(uintptr_t ptr_region){
 			break;
                 default:
                         lib_start_rapl_sysfs();
-                        printf("DEFAULT - Iniciou contador da PARALELA %d\n", id_actual_region);
                         libKernels[id_actual_region].initResult = omp_get_wtime();
 			if(boost_status != libKernels[id_actual_region].bestFreq && libKernels[id_actual_region].bestTime > write_file_threshold){ //0.1
 				fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
@@ -195,7 +192,6 @@ void lib_end_parallel_region(){
                                 libKernels[id_actual_region].totalTime += time;
                                 energy = lib_end_rapl_sysfs();
                                 libKernels[id_actual_region].totalEnergy += energy;
-                                printf("Região PARALELA %d - Energy: %lf\n", id_actual_region, energy);
                                 result = time * energy;
                                 /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
                                 if(result == 0.00000 || result < 0){
@@ -331,6 +327,8 @@ void lib_end_parallel_region(){
 				close(fd);
                                 boost_status=libKernels[id_actual_region].bestFreqSeq;
                 	}
+                        initSeqTime = omp_get_wtime();
+                        lib_start_seq_rapl_sysfs();
                         break;
 	}
 	id_previous_region = id_actual_region;
