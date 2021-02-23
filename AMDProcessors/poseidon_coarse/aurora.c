@@ -299,10 +299,10 @@ void lib_destructor()
 	printf("Poseidon - Energy: %.5f joules\n", energy);
 	printf("Poseidon - EDP: %.5f\n", edp);
 
-	for (int i = 0; i < totalKernels; i++)
-	{
-		printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThread, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
-	}
+	//for (int i = 0; i < totalKernels; i++)
+	//{
+	//	printf("%d %d %d %lf %lf\n", i, libKernels[i].bestThread, libKernels[i].bestFreq, libKernels[i].totalTime, libKernels[i].totalEnergy);
+	//}
 }
 
 void lib_detect_packages()

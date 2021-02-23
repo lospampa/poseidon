@@ -307,12 +307,6 @@ void aurora_end_parallel_region()
 	{
 	case PASS:
 		auroraKernels[id_actual_region].seqState = INITIAL;
-		//if (auroraKernels[id_actual_region].bestFreq != auroraKernels[id_actual_region].bestFreqSeq){
-		//	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-		//	sprintf(set, "%d", auroraKernels[id_actual_region].bestFreqSeq);
-		//	write(fd, set, sizeof(set));
-		//	close(fd);
-		//}
 		initSeqTime = omp_get_wtime();
 		aurora_start_seq_amd_msr();
 		break;

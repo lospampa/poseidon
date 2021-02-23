@@ -308,16 +308,6 @@ void lib_end_parallel_region()
         {
         case PASS:
                 libKernels[id_actual_region].seqState = INITIAL;
-                /* Matheus: A ideia do código abaixo seria o caso de dar um erro no registrador de energia e reiniciar a busca só que com performance. 
-                        Neste caso teria que haver o código abaixo para consegui reiniciar a busca com a métrica performance e ativando o turbo.
-                        */
-                //if (boost_status != libKernels[id_actual_region].bestFreqSeq){
-                //	fd = open("/sys/devices/system/cpu/cpufreq/boost", O_WRONLY);
-                //	sprintf(set, "%d", libKernels[id_actual_region].bestFreqSeq);
-                //	write(fd, set, sizeof(set));
-                //	close(fd);
-                //      boost_status=libKernels[id_actual_region].bestFreqSeq;
-                //}
                 initSeqTime = omp_get_wtime();
                 lib_start_seq_rapl_sysfs();
                 break;
