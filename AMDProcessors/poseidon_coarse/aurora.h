@@ -58,10 +58,10 @@ double write_file_threshold=0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int id_previous_region=-1;
-short int auroraMetric;
+short int metric;
 short int totalKernels=0;
-short int auroraTotalPackages=0;
-short int auroraTotalCores=0;
+short int libTotalPackages=0;
+short int libTotalCores=0;
 
 
 
@@ -70,7 +70,7 @@ typedef struct{
         short int numCores;
         short int bestThread;
         short int startThreads;
-        short int auroraMetric;
+        short int metric;
         short int state;
         int bestFreq;
         short int pass;
@@ -84,5 +84,5 @@ typedef struct{
         long long kernelAfter[MAX_PACKAGES];
 }typeFrame;
 
-typeFrame auroraKernels[MAX_KERNEL];
+typeFrame libKernels[MAX_KERNEL];
 

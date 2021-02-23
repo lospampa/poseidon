@@ -123,8 +123,8 @@ void
 GOMP_parallel_start (void (*fn) (void *), void *data, unsigned num_threads)
 {
   uintptr_t ptr_region = (uintptr_t)fn;
-  if(gomp_global_icv.aurora_var != -1){
-        num_threads=aurora_resolve_num_threads(ptr_region);
+  if(gomp_global_icv.lib_var != -1){
+        num_threads=lib_resolve_num_threads(ptr_region);
   }else{
 	num_threads = gomp_resolve_num_threads (num_threads, 0);
   }
@@ -172,8 +172,8 @@ GOMP_parallel (void (*fn) (void *), void *data, unsigned num_threads,
 	       unsigned int flags)
 {
 	uintptr_t ptr_region = (uintptr_t)fn;
-	if(gomp_global_icv.aurora_var != -1){
-		num_threads=aurora_resolve_num_threads(ptr_region);
+	if(gomp_global_icv.lib_var != -1){
+		num_threads=lib_resolve_num_threads(ptr_region);
 	}else{
 	  	num_threads = gomp_resolve_num_threads (num_threads, 0);
 	}
