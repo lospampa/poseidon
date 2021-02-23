@@ -34,7 +34,7 @@ Poseidon is an easy to use OpenMP framework that is completely transparent to bo
       - make install
 
 
-**IMPORTANT: Poseidon only works with GCC 9.2 versions or superior.**
+**IMPORTANT: Poseidon only works with GCC 9.2 version or superior.**
 
 
 How to use Poseidon?
