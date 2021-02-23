@@ -8,14 +8,14 @@ Poseidon is an easy to use OpenMP framework that is completely transparent to bo
 
 
 ### List of files contained in both versions of Poseidon
-* poseidon.c              Poseidon functions implementation
-* poseidon.h              Poseidon header
-* env.c                   OpenMP internal controler variables
-* libgomp.h               libgomp header
-* libgomp_g.h             libgomp header
-* parallel.c              libgomp header
-* Makefile.in             OpenMP libgomp makefile.in
-* Makefile.am             OpenMP libgomp makefile.am
+* poseidon.c            -  Poseidon functions implementation
+* poseidon.h            - Poseidon header
+* env.c                 -  OpenMP internal controler variables
+* libgomp.h             -  libgomp header
+* libgomp_g.h           -  libgomp header
+* parallel.c            -  libgomp header
+* Makefile.in           -  OpenMP libgomp makefile.in
+* Makefile.am           -  OpenMP libgomp makefile.am
 
 
 
@@ -37,7 +37,7 @@ Obs: Poseidon works with GCC 9.2 versions or superior.
 ### How to use Poseidon?
 
 
-1. Exporth the library PATH:
+1. Export the library PATH:
       - export LD_LIBRARY_PATH=/path-to-gcc-bin/lib64:$LD_LIBRARY_PATH
       
 2. Set Poseidon's environment variable:
