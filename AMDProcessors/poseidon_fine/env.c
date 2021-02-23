@@ -71,8 +71,8 @@ struct gomp_task_icv gomp_global_icv = {
   .nest_var = false,
   .bind_var = omp_proc_bind_false,
   .target_data = NULL,
-  .lib_var=0,
-  .lib_start_search=0
+  .aurora_var=0,
+  .aurora_start_search=0
 
 };
 
@@ -103,24 +103,26 @@ int goacc_default_dims[GOMP_DIM_MAX];
 /* Parse the OMP_SCHEDULE environment variable.  */
 
 
-static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
+static bool parse_aurora(const char *name, int *pvalue, bool allow_zero){
         char *env = getenv(name);
-        if(env == NULL || (strcmp("false",env) == 0) || (strcmp("FALSE",env) == 0)){
+        if(env == NULL){
                 printf("POSEIDON: Disabled\n");
-                lib_init(3,0);
+                aurora_init(3,0);
                 *pvalue = -1;
                 return false;
         }
-        if((strcmp("true",env) == 0) || (strcmp("TRUE",env) == 0)){
+
+        if( (strcmp("TRUE",env) == 0) || (strcmp("true",env) == 0)){
                 printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
         }else{
                 printf("POSEIDON - Optimization not recognized!\n");
-                printf("OpenMP Application Optimized for EDP by default\n");
-                *pvalue = 2;
+                printf("POSEIDON: Disabled\n");
+                *pvalue = -1;
                 printf("\n\t\tPlease:\n");
-                printf("\t\tTo optimize EDP: export OMP_POSEIDON=TRUE or export OMP_POSEIDON=true\n");
+                printf("\t\tTo use Poseidon: export OMP_POSEIDON=TRUE or export OMP_POSEIDON=true\n");
         }
+
         return true;
 }
 
@@ -1333,10 +1335,10 @@ initialize_env (void)
   parse_boolean ("OMP_DYNAMIC", &gomp_global_icv.dyn_var);
   parse_boolean ("OMP_NESTED", &gomp_global_icv.nest_var);
   
-  parse_lib("OMP_POSEIDON", &gomp_global_icv.lib_var, true);
-if(gomp_global_icv.lib_var != -1){
-        parse_int("OMP_POSEIDON_START_SEARCH", &gomp_global_icv.lib_start_search, true);
-          lib_init(gomp_global_icv.lib_var, gomp_global_icv.lib_start_search);
+  parse_aurora("OMP_POSEIDON", &gomp_global_icv.aurora_var,true);
+if(gomp_global_icv.aurora_var != -1){
+        parse_int("OMP_POSEIDON_START_SEARCH", &gomp_global_icv.aurora_start_search, true);
+          aurora_init(gomp_global_icv.aurora_var, gomp_global_icv.aurora_start_search);
    }
 
   

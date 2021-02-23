@@ -218,23 +218,17 @@ static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
                 *pvalue = -1;
                 return false;
         }
-        if( (strcmp("performance",env) == 0) || (strcmp("PERFORMANCE",env) == 0)){
-                printf("POSEIDON - OpenMP Application Optimized for Performance\n");
-                *pvalue = 0;
-        }
-        else if( (strcmp("edp",env) == 0) || (strcmp("EDP",env) == 0)){
+
+        if( (strcmp("TRUE",env) == 0) || (strcmp("true",env) == 0)){
                 printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
         }else{
                 printf("POSEIDON - Optimization not recognized!\n");
-                printf(" -- OpenMP Application Optimized for Performance by default\n");
-                *pvalue = 0;
+                printf("POSEIDON: Disabled\n");
+                *pvalue = -1;
                 printf("\n\t\tPlease:\n");
-                printf("\t\tTo optimize performance: export OMP_POSEIDON=PERFORMANCE or export OMP_POSEIDON=performance\n");
-                printf("\t\tTo optimize edp: export OMP_POSEIDON=EDP or export OMP_POSEIDON=edp\n");
+                printf("\t\tTo use Poseidon: export OMP_POSEIDON=TRUE or export OMP_POSEIDON=true\n");
         }
-		
-
         return true;
 }
 
