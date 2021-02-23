@@ -37,7 +37,7 @@ Poseidon is an easy to use OpenMP framework that is completely transparent to bo
 **IMPORTANT: Poseidon only works with GCC 9.2 version or superior.**
 
 
-How to use Poseidon?
+### How to use Poseidon?
 ---
 
 1. Export the library PATH:
