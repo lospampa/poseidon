@@ -118,9 +118,11 @@ static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
         }else{
                 printf("POSEIDON - Optimization not recognized!\n");
                 printf("POSEIDON: Disabled\n");
-                *pvalue = -1;
                 printf("\n\t\tPlease:\n");
                 printf("\t\tTo use Poseidon: export OMP_POSEIDON=TRUE or export OMP_POSEIDON=true\n");
+                *pvalue = -1;
+                lib_init(3,0);
+                return false;
         }
 
         return true;
