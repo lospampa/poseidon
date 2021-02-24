@@ -67,11 +67,11 @@ double initSeqTime=0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int id_previous_region=0;
-short int auroraMetric;
+short int metric;
 short boost_status=0;
 short int totalKernels=0;
-short int auroraTotalPackages=0;
-short int auroraTotalCores=0;
+short int libTotalPackages=0;
+short int libTotalCores=0;
 
 
 
@@ -81,7 +81,7 @@ typedef struct{
         short int bestThread;
         short int bestThreadOn;
         short int startThreads;
-        short int auroraMetric;
+        short int metric;
         short int seqMetric;
         short int state;
         short int seqState;
@@ -100,5 +100,5 @@ typedef struct{
         long long kernelAfterSeq[MAX_PACKAGES];
 }typeFrame;
 
-typeFrame auroraKernels[MAX_KERNEL];
+typeFrame libKernels[MAX_KERNEL];
 

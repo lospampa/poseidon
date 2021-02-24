@@ -40,9 +40,8 @@ void lib_destructor(void);
 void lib_detect_packages(void);
 void lib_start_amd_msr(void);
 double lib_end_amd_msr(void);
-int lib_find_id_kernel(uintptr_t ptr_region);
 int lib_resolve_num_threads(uintptr_t ptr_region);
-void lib_find_best_tlp(float result);
+
 
 
 
