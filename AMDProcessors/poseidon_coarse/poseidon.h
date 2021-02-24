@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <stdint.h>
 
-/*define AMD_MSR ENVIRONMENT*/
+/*Define AMD_MSR ENVIRONMENT*/
 
 #define AMD_MSR_PWR_UNIT 0xC0010299
 #define AMD_MSR_CORE_ENERGY 0xC001029A
@@ -21,11 +21,11 @@
 #define AMD_ENERGY_UNIT_MASK 0x1F00
 #define AMD_POWER_UNIT_MASK 0xF
 #define STRING_BUFFER 1024
-#define MAX_CPUS                128 //1024
-#define MAX_PACKAGES            4 //16
+#define MAX_CPUS                128 
+#define MAX_PACKAGES            4 
 
 
-/*define AURORA environment*/
+/*Define AURORA environment*/
 
 #define MAX_KERNEL              61
 #define MAX_THREADS             32
@@ -48,7 +48,7 @@
 
 
 
-/*global variables*/
+/*Global variables*/
 
 static int package_map[MAX_PACKAGES];
 char packname[MAX_PACKAGES][256];

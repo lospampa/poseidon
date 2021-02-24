@@ -1,7 +1,7 @@
 
 /* File that contains the variable declarations */
 #include <stdio.h>
-#include "aurora.h"
+#include "poseidon.h"
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */
 void lib_init(int metric, int start_search)

@@ -1,5 +1,5 @@
 /* File that contains the variable declarations */
-#include "aurora.h"
+#include "poseidon.h"
 #include <stdio.h>
 
 /* First function called. It initiallizes all the functions and variables used by AURORA */

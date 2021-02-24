@@ -12,29 +12,29 @@
 #include <unistd.h>
 #include <stdint.h>
 
-/*define RAPL Environment*/
+/*Define RAPL Environment*/
 
 #define CPU_SANDYBRIDGE         42
 #define CPU_SANDYBRIDGE_EP      45
 #define CPU_IVYBRIDGE           58
 #define CPU_IVYBRIDGE_EP        62
-#define CPU_HASWELL             60      // 70 too?
+#define CPU_HASWELL             60      
 #define CPU_HASWELL_EP          63
 #define CPU_HASWELL_1           69
-#define CPU_BROADWELL           61      // 71 too?
+#define CPU_BROADWELL           61      
 #define CPU_BROADWELL_EP        79
 #define CPU_BROADWELL_DE        86
 #define CPU_SKYLAKE             78      
 #define CPU_SKYLAKE_1           94
 #define NUM_RAPL_DOMAINS        4
-#define MAX_CPUS                128 //1024
-#define MAX_PACKAGES            4 //16
+#define MAX_CPUS                128 
+#define MAX_PACKAGES            4 
 
 
 
-/*define AURORA environment*/
+/*Define AURORA environment*/
 
-#define MAX_KERNEL              61 // Matheus: O que é isso?
+#define MAX_KERNEL              61 
 #define MAX_THREADS             32
 #define PERFORMANCE             0
 #define EDP                     2
@@ -56,7 +56,7 @@
 
 
 
-/*global variables*/
+/*Global variables*/
 
 static int package_map[MAX_PACKAGES];
 static int total_packages=0, total_cores=0;
