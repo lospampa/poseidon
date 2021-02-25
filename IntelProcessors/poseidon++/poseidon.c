@@ -216,7 +216,7 @@ void lib_end_parallel_region()
                                 libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
                                 if (libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
                                 {
-                                        if (libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCore)
+                                        if (libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores)
                                         {
                                                 libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
                                                 libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads * 2;
@@ -246,7 +246,7 @@ void lib_end_parallel_region()
                         }
                         else
                         {
-                                if (libKernels[id_actual_region].numThreads == libKernels[id_actual_region] * 2 && libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
+                                if (libKernels[id_actual_region].numThreads == libKernels[id_actual_region].lastThread * 2 && libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
                                 {
                                         libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
                                         libKernels[id_actual_region].numThreads = 1;
