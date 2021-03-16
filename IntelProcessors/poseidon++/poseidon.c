@@ -185,8 +185,9 @@ void lib_end_parallel_region()
                         energy = lib_end_rapl_sysfs();
                         result = time * energy;
                         /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
-                        if (result == 0.00000 || result < 0)
+                        if (result == 0.0000000 || result < 0)
                         {
+                                printf("Had problems");
                                 libKernels[id_actual_region].state = REPEAT;
                                 libKernels[id_actual_region].metric = PERFORMANCE;
                         }
@@ -198,7 +199,7 @@ void lib_end_parallel_region()
                         libKernels[id_actual_region].state = S0;
                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
                         libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
-                        printf("REPEAT - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        //printf("REPEAT - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
                         break;
                 case S0:
                         libKernels[id_actual_region].bestResult = result;
@@ -206,9 +207,16 @@ void lib_end_parallel_region()
                         libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads * 2;
                         libKernels[id_actual_region].state = S1;
-                        printf("S0 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        //printf("S0 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
                         break;
                 case S1:
+                        /*
+                        Problema:
+                        2 - 0.5
+                        4 - 1.5
+                        1 - 1
+                        Tem que retornar para 2.
+                        */
                         if (result < libKernels[id_actual_region].bestResult)
                         {
                                 libKernels[id_actual_region].bestResult = result;
@@ -247,7 +255,7 @@ void lib_end_parallel_region()
                         }
                         else
                         {
-                                if (libKernels[id_actual_region].numThreads == libKernels[id_actual_region].lastThread * 2 && libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
+                                if (libKernels[id_actual_region].numThreads <= 5  && libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
                                 {
                                         libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
                                         libKernels[id_actual_region].numThreads = 1;
@@ -255,7 +263,7 @@ void lib_end_parallel_region()
                                         libKernels[id_actual_region].hasSequentialBase = SEQUENTIAL_BASE_TESTED;
                                 }
 
-                                if (libKernels[id_actual_region].bestThread == libKernels[id_actual_region].numCores / 2)
+                                else if (libKernels[id_actual_region].bestThread == libKernels[id_actual_region].numCores / 2)
                                 {
                                         libKernels[id_actual_region].bestFreq = TURBO_OFF;
                                         libKernels[id_actual_region].timeTurboOn = time;
@@ -277,7 +285,7 @@ void lib_end_parallel_region()
                                         }
                                 }
                         }
-                        printf("S1 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        //printf("S1 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
                         break;
                 case S2:
                         if (libKernels[id_actual_region].bestResult < result)
