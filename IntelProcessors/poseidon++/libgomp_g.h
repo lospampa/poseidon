@@ -34,7 +34,7 @@
 #include "gstdint.h"
 
 
-/* aurora.c */
+/* poseidon.c */
 
 void lib_init(int metric, int start_search);
 void lib_destructor(void);
@@ -42,8 +42,6 @@ void lib_detect_packages(void);
 void lib_detect_cpu(void);
 void lib_start_rapl_sysfs(void);
 double lib_end_rapl_sysfs(void);
-void lib_start_seq_rapl_sysfs(void);
-double lib_end_seq_rapl_sysfs(void);
 int lib_resolve_num_threads(uintptr_t ptr_region);
 void lib_end_parallel_region(void);
 

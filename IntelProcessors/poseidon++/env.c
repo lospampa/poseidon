@@ -27,12 +27,16 @@
    for them to be initialized from environment variables at startup.  */
 
 #define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 #include "libgomp.h"
 #include "gomp-constants.h"
 #include <limits.h>
 #ifndef LIBGOMP_OFFLOADED_ONLY
 #include "libgomp_f.h"
 #include "oacc-int.h"
+#include<linux/unistd.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -222,6 +226,9 @@ static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
         if( (strcmp("TRUE",env) == 0) || (strcmp("true",env) == 0)){
                 printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
+                ///Essa linha abaixo deve executar desde que o arquivo boost tenha sido
+                /// transformado em executavel "chmod +x boost.sh"
+                system("bash /home/smmarques/Documentos/Pesquisa/gcc-9.2.0/libgomp/boost.sh &");
         }else{
                 printf("POSEIDON - Optimization not recognized!\n");
                 printf("POSEIDON: Disabled\n");
