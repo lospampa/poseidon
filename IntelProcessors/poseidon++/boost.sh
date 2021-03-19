@@ -8,15 +8,15 @@ while :
 do
         sed -i 's/,/./g' out.txt
         ipc=$(egrep "insn" out.txt | awk '{print $4}')
-        echo "ipc = $ipc"
+        #echo "ipc = $ipc"
 
-        if [ $(echo "$ipc>=0.4"| bc) -eq 0 ];
+        if [ $(echo "$ipc>0.5"| bc) -eq 0 ];
         then
                 echo $TURBO_DISABLED > /sys/devices/system/cpu/cpufreq/boost
-                
-        elif [ $(echo "$ipc<0.4"| bc) -eq 0 ];
+
+        elif [ $(echo "$ipc<=0.5"| bc) -eq 0 ];
         then
-                echo $TURBO_ENABLED > /sys/devices/system/cpu/cpufreq/boost                
+                echo $TURBO_ENABLED > /sys/devices/system/cpu/cpufreq/boost
         fi
         perf stat -e instructions,cycles -o out.txt sleep 2.0
 done
