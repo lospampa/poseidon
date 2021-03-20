@@ -214,26 +214,35 @@ parse_schedule (void)
 
 
 
-static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
+static bool parse_lib(const char *name, int *pvalue, bool allow_zero, const char *path_env){
         char *env = getenv(name);
-        if(env == NULL){
+        char *bash = "bash ";
+        char *path_var = getenv(path_env);
+        char *boost_file = "boost.sh &";
+        char temp[200];
+        strcpy(temp, bash);
+        strcat(temp, path_var);
+        strcat(temp, boost_file);
+        //printf(temp);
+
+        if(env == NULL || path_var == NULL){
                 printf("POSEIDON: Disabled\n");
-                lib_init(3,0);
+                printf("Please, activate the environment variables.");
+                lib_init(3,0); 
                 *pvalue = -1;
                 return false;
         }
 
-        if( (strcmp("TRUE",env) == 0) || (strcmp("true",env) == 0)){
+        if((strcmp("TRUE",env) == 0) || (strcmp("true",env) == 0)){
                 printf("POSEIDON - OpenMP Application Optimized for EDP\n");
                 *pvalue = 2;
-                ///Essa linha abaixo deve executar desde que o arquivo boost tenha sido
-                /// transformado em executavel "chmod +x boost.sh"
-                system("bash /home/smmarques/Documentos/Pesquisa/gcc-9.2.0/libgomp/boost.sh &");
+                system(temp);
         }else{
-                printf("POSEIDON - Optimization not recognized!\n");
+                printf("POSEIDON - Optimization not recognized or libgomp path not found!\n");
                 printf("POSEIDON: Disabled\n");
-                printf("\n\t\tPlease:\n");
-                printf("\t\tTo use Poseidon: export OMP_POSEIDON=TRUE or export OMP_POSEIDON=true\n");
+                printf("\n\t\tPlease follow the steps:\n");
+                printf("\t\t1 - export OMP_POSEIDON=TRUE or export OMP_POSEIDON=true.\n");
+                printf("\t\t2 - export OMP_POSEIDON_LIBGOMP_PATH=/PATH/TO/LIBGOMP/\n");
                 *pvalue = -1;
                 lib_init(3,0);
                 return false;
@@ -1350,8 +1359,7 @@ initialize_env (void)
   parse_boolean ("OMP_DISPLAY_AFFINITY", &gomp_display_affinity_var);
   parse_int ("OMP_DEFAULT_DEVICE", &gomp_global_icv.default_device_var, true);
   parse_int ("OMP_MAX_TASK_PRIORITY", &gomp_max_task_priority_var, true);
-
-  parse_lib("OMP_POSEIDON", &gomp_global_icv.lib_var,true);
+  parse_lib("OMP_POSEIDON", &gomp_global_icv.lib_var, true, "OMP_POSEIDON_LIBGOMP_PATH");
 if(gomp_global_icv.lib_var != -1){
         parse_int("OMP_POSEIDON_START_SEARCH", &gomp_global_icv.lib_start_search, true);
           lib_init(gomp_global_icv.lib_var, gomp_global_icv.lib_start_search);
