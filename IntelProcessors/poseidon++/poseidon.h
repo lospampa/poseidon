@@ -66,7 +66,6 @@ char packname[MAX_PACKAGES][256];
 char tempfile[256];
 int valid[MAX_PACKAGES][NUM_RAPL_DOMAINS];
 double initGlobalTime = 0.0;
-double initSeqTime=0.0;
 unsigned long int idKernels[MAX_KERNEL];
 short int id_actual_region=0;
 short int totalKernels=0;
