@@ -103,7 +103,7 @@ int goacc_default_dims[GOMP_DIM_MAX];
 /* Parse the OMP_SCHEDULE environment variable.  */
 
 
-static bool parse_lib(const char *name, int *pvalue, bool allow_zero){
+static bool parse_lib(const char *name, int *pvalue, bool allow_zero, const char *path_env){
         char *env = getenv(name);
          char *bash = "bash ";
         char *path_var = getenv(path_env);
