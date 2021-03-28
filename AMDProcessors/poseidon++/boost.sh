@@ -18,5 +18,5 @@ do
         then
                 echo $TURBO_ENABLED > /sys/devices/system/cpu/cpufreq/boost
         fi
-        perf stat -e instructions,cycles -o out.txt sleep 2.0
+        perf stat -e instructions,cycles -o out.txt sleep 3.0
 done
