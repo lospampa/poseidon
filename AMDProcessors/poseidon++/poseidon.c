@@ -77,138 +77,160 @@ int lib_resolve_num_threads(uintptr_t ptr_region)
 /* It is responsible for performing the search algorithm */
 void lib_end_parallel_region()
 {
-	double time = 0, energy = 0, result = 0;
-	if (libKernels[id_actual_region].state != END)
-	{
-		/* Check the metric that is being evaluated and collect the results */
-		switch (libKernels[id_actual_region].metric)
-		{
-		case PERFORMANCE:
-			//printf("case Performance\n");
-			result = omp_get_wtime() - libKernels[id_actual_region].initResult;
-			time = result;
-			break;
-		case EDP:
-			//printf("case EDP\n");
-			time = omp_get_wtime() - libKernels[id_actual_region].initResult;
-			energy = lib_end_amd_msr();
-			result = time * energy;
-			/* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
-			if (result == 0.00000 || result < 0)
-			{
-				libKernels[id_actual_region].state = REPEAT;
-				libKernels[id_actual_region].metric = PERFORMANCE;
-			}
-			break;
-		}
-		switch (libKernels[id_actual_region].state)
-		{
-		case REPEAT:
-			libKernels[id_actual_region].state = S0;
-			libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
-			libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
-			break;
-		case S0:
-			libKernels[id_actual_region].bestResult = result;
-			libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
-			libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads * 2;
-			libKernels[id_actual_region].state = S1;
-			break;
-		case S1:
-			if (result < libKernels[id_actual_region].bestResult)
-			{
-				libKernels[id_actual_region].bestResult = result;
-				libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
-				if (libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
-				{
-					if (libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores)
-					{
-						libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
-						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads * 2;
-					}
-					else
-					{
-						libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 2;
-						if (libKernels[id_actual_region].pass >= 2)
-						{
-							libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
-							libKernels[id_actual_region].state = S2;
-						}
-						else
-						{
-							libKernels[id_actual_region].state = S3;
-						}
-					}
-				}
-				else
-				{
-					libKernels[id_actual_region].state = S3;
-				}
-			}
-			else
-			{
-
-				if (libKernels[id_actual_region].numThreads == libKernels[id_actual_region].startThreads * 2 && libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
+	double time, energy, result = 0;
+        if (libKernels[id_actual_region].state != END)
+        {
+                /* Check the metric that is being evaluated and collect the results */
+                switch (libKernels[id_actual_region].metric)
+                {
+                case PERFORMANCE:
+                        time = omp_get_wtime();
+                        result = time - libKernels[id_actual_region].initResult;
+                        break;
+                case EDP:
+                        time = omp_get_wtime() - libKernels[id_actual_region].initResult;
+                        energy = lib_end_amd_msr();
+                        result = time * energy;
+                        /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
+                        if (libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED && (result == 0.00000 || result < 0))
+                        {
+                                libKernels[id_actual_region].state = REPEAT;
+                                libKernels[id_actual_region].metric = PERFORMANCE;
+                        }
+                        break;
+                }
+                switch (libKernels[id_actual_region].state)
+                {
+                case REPEAT:
+                        libKernels[id_actual_region].state = S0;
+                        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
+                        libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
+                        //printf("REPEAT - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        break;
+                case S0:
+                        libKernels[id_actual_region].bestResult = result;
+                        libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
+                        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread * 2;
+                        libKernels[id_actual_region].state = S1;
+                        //printf("S0 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        break;
+                case S1:
+                        if (result < libKernels[id_actual_region].bestResult)
+                        { //comparing S0 to REPEAT
+                                libKernels[id_actual_region].bestResult = result;
+                                libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
+                                if (libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
+                                {
+                                        /* if there are opportunities for improvements, then double the number of threads */
+                                        if (libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores)
+                                        {
+                                                libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
+                                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread * 2;
+                                                libKernels[id_actual_region].state = S1;
+                                        }
+                                        else
+                                        {
+                                                /* It means that the best number so far is equal to the number of cores */
+                                                /* Then, it will realize a guided search near to this number */
+                                                libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 2;
+                                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
+                                                if (libKernels[id_actual_region].pass == 1)
+                                                {
+                                                        libKernels[id_actual_region].state = S3;
+                                                }
+                                                else
+                                                {
+                                                        libKernels[id_actual_region].state = S2;
+                                                }
+                                        }
+                                }
+                                else
+                                {
+                                        libKernels[id_actual_region].state = END;
+                                }
+                        }
+                        else
+                        {
+                                /* Thread scalability stopped */
+                                /* Find the interval of threads that provided this result. */
+                                /* if the best number of threads so far is equal to the number of cores, then go to.. */
+                                if (libKernels[id_actual_region].numThreads == libKernels[id_actual_region].startThreads * 2 && libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
 				{
 					libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
 					libKernels[id_actual_region].numThreads = 1;
 					libKernels[id_actual_region].hasSequentialBase = SEQUENTIAL_BASE_TESTED;
 				}
-				else if (libKernels[id_actual_region].bestThread == libKernels[id_actual_region].numCores / 2)
-				{
-					libKernels[id_actual_region].state = S3;
-				}
-				else
-				{
-					libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 2;
-					if (libKernels[id_actual_region].pass >= 2)
-					{
-						libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-						libKernels[id_actual_region].state = S2;
-					}
-					else
-					{
-						libKernels[id_actual_region].state = S3;
-					}
-				}
-			}
-			break;
-		case S2:
-			if (libKernels[id_actual_region].bestResult < result)
-			{
-				libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 2;
-				if (libKernels[id_actual_region].pass >= 2)
-				{
-					libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-				}
-				else
-				{
-					libKernels[id_actual_region].state = S3;
-				}
-			}
-			else
-			{
-				libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
-				libKernels[id_actual_region].bestResult = result;
-				libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 2;
-				if (libKernels[id_actual_region].pass >= 2)
-				{
-					libKernels[id_actual_region].numThreads += libKernels[id_actual_region].pass;
-				}
-				else
-				{
-					libKernels[id_actual_region].state = S3;
-				}
-			}
-			break;
-		case S3:
-			libKernels[id_actual_region].state = END;
-			if (libKernels[id_actual_region].bestResult < result)
-				libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
 
-			break;
-		}
-	}
+                                else if (libKernels[id_actual_region].bestThread == libKernels[id_actual_region].numCores / 2)
+                                {
+                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 2;
+                                        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
+                                        if (libKernels[id_actual_region].pass == 1)
+                                        {
+                                                libKernels[id_actual_region].state = S3;
+                                        }
+                                        else
+                                        {
+                                                libKernels[id_actual_region].state = S2;
+                                        }
+                                }
+                                else
+                                {
+                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 2;
+                                        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
+                                        if (libKernels[id_actual_region].pass == 1)
+                                        {
+                                                libKernels[id_actual_region].state = S3;
+                                        }
+                                        else
+                                        {
+                                                libKernels[id_actual_region].state = S2;
+                                        }
+                                }
+                        }
+                        //printf("S1 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        break;
+                case S2:
+                        if (libKernels[id_actual_region].bestResult < result)
+                        {
+                                libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 2;
+                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
+                                if (libKernels[id_actual_region].pass == 1)
+                                {
+                                        libKernels[id_actual_region].state = S3;
+                                }
+                                else
+                                {
+                                        libKernels[id_actual_region].state = S2;
+                                }
+                        }
+                        else
+                        {
+                                libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
+                                libKernels[id_actual_region].bestResult = result;
+                                libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 2;
+                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
+                                if (libKernels[id_actual_region].pass == 1)
+                                {
+                                        libKernels[id_actual_region].state = S3;
+                                }
+                                else
+                                {
+                                        libKernels[id_actual_region].state = S2;
+                                }
+                        }
+                        //printf("S2 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        break;
+                case S3: /*The last comparison to define the best number of threads*/
+                        libKernels[id_actual_region].state = END;
+                        if (result < libKernels[id_actual_region].bestResult)
+                        {
+                                libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
+                        }
+                        //printf("S3 - Região %d, Número de Threads %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region, libKernels[id_actual_region].numThreads, result, libKernels[id_actual_region].bestResult);
+                        break;
+                }
+        }
 }
 
 /* It finalizes the environment of Aurora */
