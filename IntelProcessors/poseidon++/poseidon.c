@@ -76,11 +76,11 @@ int lib_resolve_num_threads(uintptr_t ptr_region)
 /* It is responsible for performing the search algorithm */
 void lib_end_parallel_region()
 {
-        double time, energy, result = 0, ratio;
+        double time, energy, result = 0;
         if (libKernels[id_actual_region].state != END)
         {
                 /* Check the metric that is being evaluated and collect the results */
-                switch (libKernels[id_actual_region].auroraMetric)
+                switch (libKernels[id_actual_region].metric)
                 {
                 case PERFORMANCE:
                         time = omp_get_wtime();
@@ -94,7 +94,7 @@ void lib_end_parallel_region()
                         if (result == 0.00000 || result < 0)
                         {
                                 libKernels[id_actual_region].state = REPEAT;
-                                libKernels[id_actual_region].auroraMetric = PERFORMANCE;
+                                libKernels[id_actual_region].metric = PERFORMANCE;
                         }
                         break;
                 }
