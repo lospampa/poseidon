@@ -198,7 +198,6 @@ void lib_end_parallel_region()
                                 else
                                 {
                                         libKernels[id_actual_region].state = S2;
-                                        ,
                                 }
                         }
                         else
