@@ -10,13 +10,13 @@ do
         ipc=$(egrep "insn" out.txt | awk '{print $4}')
         #echo "ipc = $ipc"
 
-        if [ $(echo "$ipc>0.3"| bc) -eq 0 ];
+        if [ $(echo "$ipc>0.6"| bc) -eq 0 ];
         then
                 echo $TURBO_DISABLED > /sys/devices/system/cpu/cpufreq/boost
 
-        elif [ $(echo "$ipc<=0.3"| bc) -eq 0 ];
+        elif [ $(echo "$ipc<=0.6"| bc) -eq 0 ];
         then
                 echo $TURBO_ENABLED > /sys/devices/system/cpu/cpufreq/boost
         fi
-        perf stat -e instructions,cycles -o out.txt sleep 2.0
+        perf stat -e instructions,cycles -o out.txt sleep 5.0
 done
