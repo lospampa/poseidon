@@ -91,7 +91,7 @@ void lib_end_parallel_region()
                         energy = lib_end_rapl_sysfs();
                         result = time * energy;
                         /* If the result is negative, it means some problem while reading of the hardware counter. Then, the metric changes to performance */
-                        if (libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED && (result == 0.00000 || result < 0))
+                        if (result == 0.00000 || result < 0)
                         {
                                 libKernels[id_actual_region].state = REPEAT;
                                 libKernels[id_actual_region].metric = PERFORMANCE;
