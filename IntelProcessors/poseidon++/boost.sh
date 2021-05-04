@@ -15,7 +15,7 @@ do
                 ACTUAL_STATE=$TURBO_DISABLED    
                 echo $TURBO_DISABLED > /sys/devices/system/cpu/cpufreq/boost
 
-        elif [ $(echo "$ipc<=0.6"| bc) -eq 0 ] && [ $ACTUAL_STATE -eq $TURBO_ENABLED ];
+        elif [ $(echo "$ipc<=0.6"| bc) -eq 0 ] && [ $ACTUAL_STATE -eq $TURBO_DISABLED ];
         then
                 ACTUAL_STATE=$TURBO_ENABLED
                 echo $TURBO_ENABLED > /sys/devices/system/cpu/cpufreq/boost
