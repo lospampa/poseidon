@@ -120,8 +120,8 @@ void lib_end_parallel_region()
                         { //comparing S0 to REPEAT
                                 libKernels[id_actual_region].bestResult = result;
                                 libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
-                                //if (libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
-                                //{
+                                if (libKernels[id_actual_region].hasSequentialBase == SEQUENTIAL_BASE_NOT_TESTED)
+                                {
                                         /* if there are opportunities for improvements, then double the number of threads */
                                         if (libKernels[id_actual_region].numThreads * 2 <= libKernels[id_actual_region].numCores)
                                         {
@@ -144,11 +144,11 @@ void lib_end_parallel_region()
                                                         libKernels[id_actual_region].state = S2;
                                                 }
                                         }
-                                //}
-                                //else
-                                //{
-                                //        libKernels[id_actual_region].state = END;
-                                //}
+                                }
+                                else
+                                {
+                                        libKernels[id_actual_region].state = END;
+                                }
                         }
                         else
                         {
