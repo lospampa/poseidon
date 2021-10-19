@@ -24,6 +24,7 @@ void lib_init(int metric, int start_search)
                 libKernels[i].numThreads = numCores;
                 libKernels[i].startThreads = startThreads;
                 libKernels[i].numCores = numCores;
+                libKernels[i].initResult = 0.0;
                 libKernels[i].state = REPEAT;
                 libKernels[i].metric = metric;
                 libKernels[i].hasSequentialBase = SEQUENTIAL_BASE_NOT_TESTED;
@@ -77,7 +78,7 @@ void lib_end_parallel_region()
         double result = 0;
         if (libKernels[id_actual_region].state != END)
         {
-                result = lib_end_rapl_sysfs();   
+                result = lib_end_rapl_sysfs();
                 switch (libKernels[id_actual_region].state)
                 {
                 case REPEAT:
@@ -181,8 +182,10 @@ void lib_end_parallel_region()
                                 {
                                         libKernels[id_actual_region].state = S3;
                                 }
-                                else//printf("S1 - Região %d, Num Thread %d, Best Thread %d, Resultado Atual %lf, Melhor Resultado %lf\n", id_actual_region,
-                        // libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread, result, libKernels[id_actual_region].bestResult);
+                                else
+                                {
+                                        libKernels[id_actual_region].state = S2;
+                                }
                         }
                         else
                         {
