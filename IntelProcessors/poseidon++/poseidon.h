@@ -29,6 +29,7 @@
 #define NUM_RAPL_DOMAINS        4
 #define MAX_CPUS                128 
 #define MAX_PACKAGES            4 
+#define MIN_NUM_THREADS         2
 
 
 
@@ -40,14 +41,13 @@
 #define EDP                     2
 
 
-#define END                     110
-#define S0                      100
-#define S1                      101
-#define S2                      102
-#define S3                      103
-#define S4                      104
-#define S5                      105
-#define REPEAT                  106
+
+#define REPEAT                  100
+#define S0                      101
+#define S1                      102
+#define S2                      103
+#define S3                      104
+#define END                     105
 #define SEQUENTIAL_BASE_TESTED  115
 #define SEQUENTIAL_BASE_NOT_TESTED 116
 
