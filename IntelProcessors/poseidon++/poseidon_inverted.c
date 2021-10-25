@@ -175,7 +175,7 @@ void lib_end_parallel_region()
                         {
                                 libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 4;
                                 libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
-                                if (libKernels[id_actual_region].pass == 1)
+                                if (libKernels[id_actual_region].pass <= 1)
                                 {
                                         libKernels[id_actual_region].state = S3;
                                 }
@@ -190,7 +190,7 @@ void lib_end_parallel_region()
                                 libKernels[id_actual_region].bestResult = result;
                                 libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 4;
                                 libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
-                                if (libKernels[id_actual_region].pass == 1)
+                                if (libKernels[id_actual_region].pass <= 1)
                                 {
                                         libKernels[id_actual_region].state = S3;
                                 }
