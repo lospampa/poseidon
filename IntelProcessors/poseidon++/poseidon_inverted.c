@@ -117,14 +117,14 @@ void lib_end_parallel_region()
                                 /* if there are opportunities for improvements, then double the number of threads */
                                 if (libKernels[id_actual_region].numThreads / 2 > MIN_NUM_THREADS)
                                 {
-                                        //libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
+                                        libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
                                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread / 2;
                                         libKernels[id_actual_region].state = S1;
                                 }
                                 else
                                 {
-                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].numThreads * 2;
-                                        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
+                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 2;
+                                        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
                                         if (libKernels[id_actual_region].pass <= 1)
                                         {
                                                 libKernels[id_actual_region].state = S3;
@@ -171,7 +171,7 @@ void lib_end_parallel_region()
                         if (libKernels[id_actual_region].bestResult < result)
                         {
                                 libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 2;
-                                if (libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass > MIN_NUM_THREADS)
+                                if (libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass >= MIN_NUM_THREADS)
                                 {
                                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
                                         if (libKernels[id_actual_region].pass <= 1)
