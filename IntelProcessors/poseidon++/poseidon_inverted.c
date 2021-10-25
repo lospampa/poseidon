@@ -166,6 +166,9 @@ void lib_end_parallel_region()
                                         }
                                 }
                         }
+                        if (libKernels[id_actual_region].numThreads == 0){
+                                libKernels[id_actual_region].numThreads = 1;
+                        }
                         printf("S1 - Região %d, Num Thread %d, Best Thread %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread);
                         break;
                 case S2:
