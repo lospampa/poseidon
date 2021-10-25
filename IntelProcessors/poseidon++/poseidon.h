@@ -29,7 +29,7 @@
 #define NUM_RAPL_DOMAINS        4
 #define MAX_CPUS                128 
 #define MAX_PACKAGES            4 
-#define MIN_NUM_THREADS         2
+#define MIN_NUM_THREADS         1
 
 
 

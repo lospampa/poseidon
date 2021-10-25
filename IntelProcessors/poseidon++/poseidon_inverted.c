@@ -30,6 +30,7 @@ void lib_init(int metric, int start_search)
         id_actual_region = MAX_KERNEL - 1;
         lib_start_rapl_sysfs();
         initGlobalTime = omp_get_wtime();
+        printf("ENVIROMENT VARIABLES STARTED")
 }
 
 /* It defines the number of threads that will execute the actual parallel region based on the current state of the search algorithm */
@@ -66,6 +67,7 @@ int lib_resolve_num_threads(uintptr_t ptr_region)
                 libKernels[id_actual_region].initResult = omp_get_wtime();
                 return libKernels[id_actual_region].numThreads;
         }
+        
 }
 
 /* It is responsible for performing the search algorithm */
