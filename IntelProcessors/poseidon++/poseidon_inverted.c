@@ -100,14 +100,14 @@ void lib_end_parallel_region()
                         libKernels[id_actual_region].state = S0;
                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].startThreads;
                         libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
-                        //printf("REPEAT - Região %d, Num Thread %d, Best Thread %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread);
+                        printf("REPEAT - Região %d, Num Thread %d, Best Thread %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread);
                         break;
                 case S0:
                         libKernels[id_actual_region].bestResult = result;
                         libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread / 2;
                         libKernels[id_actual_region].state = S1;
-                        //printf("S0 - Região %d, Num Thread %d, Best Thread %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread);
+                        printf("S0 - Região %d, Num Thread %d, Best Thread %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread);
                         break;
                 case S1:
                         if (result < libKernels[id_actual_region].bestResult)
@@ -117,13 +117,13 @@ void lib_end_parallel_region()
                                 /* if there are opportunities for improvements, then double the number of threads */
                                 if (libKernels[id_actual_region].numThreads / 2 > MIN_NUM_THREADS)
                                 {
-                                        libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
+                                        //libKernels[id_actual_region].lastThread = libKernels[id_actual_region].numThreads;
                                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].bestThread / 2;
                                         libKernels[id_actual_region].state = S1;
                                 }
                                 else
                                 {
-                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 4;
+                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].numThreads * 2;
                                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
                                         if (libKernels[id_actual_region].pass <= 1)
                                         {
@@ -140,7 +140,7 @@ void lib_end_parallel_region()
                         {
                                 if (libKernels[id_actual_region].bestThread == libKernels[id_actual_region].numCores / 2)
                                 {
-                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 4; 
+                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].numThreads / 2; 
                                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;  
                                         if (libKernels[id_actual_region].pass <= 1)
                                         {
@@ -153,9 +153,9 @@ void lib_end_parallel_region()
                                 }
                                 else
                                 {
-                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].lastThread / 4; 
+                                        libKernels[id_actual_region].pass = libKernels[id_actual_region].numThreads / 2; 
                                         libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass; 
-                                        if (libKernels[id_actual_region].pass <= 1)
+                                        if (libKernels[id_actual_region].pass == 1)
                                         {
                                                 libKernels[id_actual_region].state = S3;
                                         }
@@ -165,27 +165,33 @@ void lib_end_parallel_region()
                                         }
                                 }
                         }
-                        //printf("S1 - Região %d, Num Thread %d, Best Thread %d, Pass %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread, libKernels[id_actual_region].pass);
+                        printf("S1 - Região %d, Num Thread %d, Best Thread %d, Pass %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread, libKernels[id_actual_region].pass);
                         break;
                 case S2:
                         if (libKernels[id_actual_region].bestResult < result)
                         {
-                                libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 4;
-                                libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
-                                if (libKernels[id_actual_region].pass <= 1)
+                                libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 2;
+                                if (libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass > MIN_NUM_THREADS)
                                 {
-                                        libKernels[id_actual_region].state = S3;
-                                }
-                                else
+                                        libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads - libKernels[id_actual_region].pass;
+                                        if (libKernels[id_actual_region].pass <= 1)
+                                        {
+                                                libKernels[id_actual_region].state = S3;
+                                        }
+                                        else
+                                        {
+                                                libKernels[id_actual_region].state = S2;
+                                        }
+                                } else 
                                 {
-                                        libKernels[id_actual_region].state = S2;
+                                        libKernels[id_actual_region].state = END;
                                 }
                         }
                         else
                         {
                                 libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
                                 libKernels[id_actual_region].bestResult = result;
-                                libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 4;
+                                libKernels[id_actual_region].pass = libKernels[id_actual_region].pass / 2;
                                 libKernels[id_actual_region].numThreads = libKernels[id_actual_region].numThreads + libKernels[id_actual_region].pass;
                                 if (libKernels[id_actual_region].pass <= 1)
                                 {
@@ -196,7 +202,7 @@ void lib_end_parallel_region()
                                         libKernels[id_actual_region].state = S2;
                                 }
                         }
-                        //printf("S2 - Região %d, Num Thread %d, Best Thread %d, Pass %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread, libKernels[id_actual_region].pass);
+                        printf("S2 - Região %d, Num Thread %d, Best Thread %d, Pass %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread, libKernels[id_actual_region].pass);
                         break;
                 case S3: /*The last comparison to define the best number of threads*/
                         libKernels[id_actual_region].state = END;
@@ -204,7 +210,7 @@ void lib_end_parallel_region()
                         {
                                 libKernels[id_actual_region].bestThread = libKernels[id_actual_region].numThreads;
                         }
-                        //printf("S3 - Região %d, Num Thread %d, Best Thread %d, Pass %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread, libKernels[id_actual_region].pass);
+                        printf("S3 - Região %d, Num Thread %d, Best Thread %d, Pass %d\n", id_actual_region, libKernels[id_actual_region].numThreads, libKernels[id_actual_region].bestThread, libKernels[id_actual_region].pass);
                         break;
                 }
         }
